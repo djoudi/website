@@ -145,6 +145,14 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
+        /*
+         * devpane.com Service Providers
+         */
+        Vinkla\Pusher\PusherServiceProvider::class,
+        Laravel\Socialite\SocialiteServiceProvider::class,
+        Mpociot\Teamwork\TeamworkServiceProvider::class,
+        Laravel\Cashier\CashierServiceProvider::class,
+
     ],
 
     /*
@@ -193,6 +201,11 @@ return [
         'URL'       => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View'      => Illuminate\Support\Facades\View::class,
+
+        /*
+         * devpane.com Aliases
+         */
+        'Socialite' => Laravel\Socialite\Facades\Socialite::class,
 
     ],
 

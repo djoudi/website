@@ -1,0 +1,32 @@
+{
+  "name": "devpane",
+  "version": "0.0.0",
+  "authors": [
+    "Florian Wartner <f.wartner@ployin.co>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [
+    "globals",
+    "node",
+    "yui"
+  ],
+  "license": "MIT",
+  "homepage": "https://devpane.com",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "resources/assets/components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.5",
+    "font-awesome": "~4.4.0",
+    "vue": "~0.12.16",
+    "sweetalert": "~1.1.1",
+    "lity": "~1.5.0"
+  }
+}
