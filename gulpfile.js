@@ -6,7 +6,7 @@ var paths = {
     'sweetalert': './resources/assets/components/sweetalert/dist/',
     'bootstrap': './resources/assets/components/bootstrap/dist/',
     'fontawesome': './resources/assets/components/font-awesome/',
-    'general': './resources/assets/components/',
+    'general': './resources/assets/',
     'public': './public/'
 }
 
@@ -16,12 +16,14 @@ elixir(function(mix) {
     ], 'public/css/app.css')
         .copy(paths.bootstrap + 'fonts/**', 'public/fonts')
         .copy(paths.fontawesome + 'fonts/**', 'public/fonts')
+        .copy(paths.bootstrap + 'fonts/**', 'public/build/fonts')
+        .copy(paths.fontawesome + 'fonts/**', 'public/build/fonts')
 
         .styles([
             paths.bootstrap + "css/bootstrap.css",
             paths.fontawesome + "css/font-awesome.css",
             paths.sweetalert + "sweetalert.css",
-            paths.general + "lity/dist/lity.css"
+            paths.general + "components/lity/dist/lity.css"
         ], 'public/css/vendor.css')
 
         .scripts([
@@ -29,8 +31,13 @@ elixir(function(mix) {
             paths.vue + "dist/vue.js",
             paths.sweetalert + "sweetalert-dev.js",
             paths.bootstrap + "js/bootstrap.js",
-            paths.general + "lity/dist/lity.js"
+            paths.general + "components/lity/dist/lity.js"
         ], 'public/js/vendor.js')
 
-        .version(['css/vendor.css', 'css/app.css', 'js/vendor.js']);;
+        .scripts([
+
+            paths.general + "js/app.js"
+        ], 'public/js/app.js')
+
+        .version(['css/vendor.css', 'css/app.css', 'js/vendor.js', 'js/app.js']);;
 });

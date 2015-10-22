@@ -28,6 +28,8 @@ class AuthController extends Controller
 
     use AuthenticatesAndRegistersUsers, ThrottlesLogins;
 
+    protected $redirectPath = '/';
+
     /**
      * Create a new authentication controller instance.
      *
@@ -73,7 +75,7 @@ class AuthController extends Controller
      *
      * @return Response
      */
-    public function redirectToProvider()
+    public function redirectToGithub()
     {
         return Socialite::driver('github')->redirect();
     }
@@ -83,7 +85,7 @@ class AuthController extends Controller
      *
      * @return Response
      */
-    public function handleProviderCallback()
+    public function handleGithubCallback()
     {
         try {
             $user = Socialite::driver('github')->user();
@@ -91,7 +93,15 @@ class AuthController extends Controller
             return Redirect::to('auth/github');
         }
 
-        $authUser = $this->findOrCreateUser($user);
+        $authUser = $this->findOrCreateGithubUser($user);
+
+        if(!$user->email) {
+            session()->put('comp_name', $user->name);
+            session()->put('comp_username', $user->nickname);
+            session()->put('comp_avatar', $user->avatar);
+            session()->put('comp_github_id', $user->id);
+            return redirect('auth/complete');
+        }
 
         Auth::login($authUser, true);
 
@@ -104,7 +114,7 @@ class AuthController extends Controller
      * @param $githubUser
      * @return User
      */
-    private function findOrCreateUser($githubUser)
+    private function findOrCreateGithubUser($githubUser)
     {
         if ($authUser = User::where('github_id', $githubUser->id)->first()) {
             return $authUser;
@@ -112,10 +122,81 @@ class AuthController extends Controller
 
         return User::create([
             'name' => $githubUser->name,
+            'username' => $githubUser->name,
             'email' => $githubUser->email,
             'github_id' => $githubUser->id,
             'avatar' => $githubUser->avatar
         ]);
+    }
+
+    /**
+     * Redirect the user to the Twitter authentication page.
+     *
+     * @return Response
+     */
+    public function redirectToTwitter()
+    {
+        return Socialite::driver('twitter')->redirect();
+    }
+
+    /**
+     * Obtain the user information from Twitter.
+     *
+     * @return Response
+     */
+    public function handleTwitterCallback()
+    {
+        try {
+            $user = Socialite::driver('twitter')->user();
+        } catch (Exception $e) {
+            return Redirect::to('auth/twitter');
+        }
+//        dd($user);
+
+        $authUser = $this->findOrCreateTwitterUser($user);
+
+        if(!$user->email) {
+            session()->put('comp_name', $user->name);
+            session()->put('comp_username', $user->nickname);
+            session()->put('comp_avatar', $user->avatar);
+            session()->put('comp_twitter_id', $user->id);
+            return redirect('auth/complete');
+        }
+
+        Auth::login($authUser, true);
+
+        return Redirect::to('home');
+    }
+
+    /**
+     * Return user if exists; create and return if doesn't
+     *
+     * @param $twitterUser
+     * @return User
+     */
+    private function findOrCreateTwitterUser($twitterUser)
+    {
+        if(!$twitterUser->email) {
+
+            return redirect('auth/complete');
+        }
+
+        if ($authUser = User::where('twitter_id', $twitterUser->id)->first()) {
+            return $authUser;
+        }
+
+        return User::create([
+            'name' => $twitterUser->name,
+            'username' => $twitterUser->nickname,
+            'email' => $twitterUser->email,
+            'twitter_id' => $twitterUser->id,
+            'avatar' => $twitterUser->avatar
+        ]);
+    }
+
+    public function getComplete() {
+        alert()->success('Success Message', 'Optional Title');
+        return view('auth.complete');
     }
 
 }
