@@ -31,7 +31,8 @@ elixir(function(mix) {
             paths.vue + "dist/vue.js",
             paths.sweetalert + "sweetalert-dev.js",
             paths.bootstrap + "js/bootstrap.js",
-            paths.general + "components/lity/dist/lity.js"
+            paths.general + "components/lity/dist/lity.js",
+            paths.general + "components/typeahead.js/dist/typeahead.jquery.js"
         ], 'public/js/vendor.js')
 
         .scripts([
