@@ -7,7 +7,8 @@ use Cviebrock\EloquentSluggable\SluggableInterface;
 use Cviebrock\EloquentSluggable\SluggableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Meetup extends Model implements SluggableInterface
+
+class Awesome extends Model implements SluggableInterface
 {
     use SoftDeletes, SluggableTrait;
 
@@ -16,7 +17,7 @@ class Meetup extends Model implements SluggableInterface
      *
      * @var string
      */
-    protected $table = 'meetups';
+    protected $table = 'awesomes';
 
     /**
      * The attributes that are mass assignable.
@@ -30,11 +31,8 @@ class Meetup extends Model implements SluggableInterface
         'thumbnail',
         'content',
         'topic',
-        'city',
-        'street',
-        'housenumber',
-        'zip',
         'url',
+        'author',
         'user_id',
         'approved'
     ];

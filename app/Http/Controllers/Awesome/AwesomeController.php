@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Awesome;
 
+use App\Awesome;
 use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
+use GrahamCampbell\Markdown\Facades\Markdown;
 
 class AwesomeController extends Controller
 {
@@ -42,12 +44,16 @@ class AwesomeController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param $slug
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($slug)
     {
-        //
+        $list = Awesome::where('slug', $slug)->first();
+        $file = file_get_contents($list->url);
+
+        return Markdown::convertToHtml($file);
+
     }
 
     /**

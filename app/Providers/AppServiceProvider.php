@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Meetup;
+use App\User;
 use Illuminate\Support\ServiceProvider;
+use Thujohn\Twitter\Facades\Twitter;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +17,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        User::created(function ($user) {
+            //
+        });
+
+        Meetup::created(function ($meetup) {
+            //return Twitter::postTweet(['status' => 'New #meetup: ' . $meetup->title . ' - ' . url('meetups/meetup/'.$meetup->getSlug()), 'format' => 'json']);
+        });
     }
 
     /**

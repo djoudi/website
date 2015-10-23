@@ -41,4 +41,12 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
 
     protected $dates = ['trial_ends_at', 'subscription_ends_at'];
 
+    public function meetups() {
+        return $this->hasMany(Meetup::class);
+    }
+
+    public function awesomes() {
+        return $this->hasMany(Awesome::class);
+    }
+
 }

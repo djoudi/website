@@ -156,6 +156,8 @@ return [
         UxWeb\SweetAlert\SweetAlertServiceProvider::class,
         Cviebrock\EloquentSluggable\SluggableServiceProvider::class,
         Thujohn\Twitter\TwitterServiceProvider::class,
+        GrahamCampbell\Markdown\MarkdownServiceProvider::class,
+        Intervention\Image\ImageServiceProvider::class,
 
     ],
 
@@ -214,6 +216,8 @@ return [
         'Html'      => Collective\Html\HtmlFacade::class,
         'Alert'     => UxWeb\SweetAlert\SweetAlert::class,
         'Twitter'   => Thujohn\Twitter\Facades\Twitter::class,
+        'Markdown'  => GrahamCampbell\Markdown\Facades\Markdown::class,
+        'Image'     => Intervention\Image\Facades\Image::class,
 
     ],
 

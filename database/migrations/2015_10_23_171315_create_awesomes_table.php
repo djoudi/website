@@ -3,7 +3,7 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateMeetupsTable extends Migration
+class CreateAwesomesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -12,7 +12,7 @@ class CreateMeetupsTable extends Migration
      */
     public function up()
     {
-        Schema::create('meetups', function (Blueprint $table) {
+        Schema::create('awesomes', function (Blueprint $table) {
             $table->increments('id');
 
             $table->string('title');
@@ -21,13 +21,10 @@ class CreateMeetupsTable extends Migration
             $table->string('thumbnail');
             $table->text('content');
             $table->text('topic');
-            $table->string('url')->nullable();
+            $table->string('url');
 
-            $table->string('city')->nullable();
-            $table->string('street')->nullable();
-            $table->string('housenumber')->nullable();
-            $table->string('zip')->nullable();
-
+            $table->string('author')->nullable();
+            
             $table->boolean('approved')->default('0');
 
             $table->integer('user_id')->unsigned()->index();
@@ -45,6 +42,6 @@ class CreateMeetupsTable extends Migration
      */
     public function down()
     {
-        Schema::drop('meetups');
+        Schema::drop('awesomes');
     }
 }

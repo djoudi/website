@@ -39,13 +39,16 @@ Route::group(['prefix' => 'meetups'], function () {
     Route::get('meetup/{slug}/attendees', 'Meetup\AttendeeController@show');
 });
 
-Route::group(['prefix' => 'awesome'], function () {
+Route::group(['prefix' => 'awesomes'], function () {
     Route::get('/', 'Awesome\AwesomeController@index');
-    Route::get('meetup/{slug}', 'Awesome\AwesomeController@show');
+    Route::get('list/{slug}', 'Awesome\AwesomeController@show');
 });
 
-Route::post('api/mentions', 'Site\ApiController@mention');
-Route::get('api/mentions', 'Site\ApiController@mention');
+Route::group(['prefix' => 'account', 'middleware' => 'auth'], function () {
+    Route::get('/', 'User\AccountController@getIndex');
+    Route::get('update', 'User\AccountController@getUpdate');
+    Route::post('update/{id}', 'User\AccountController@postUpdate');
+});
 
-Route::post('api/post', 'Site\ApiController@timePost');
-Route::get('api/post', 'Site\ApiController@timePost');
+Route::get('test/meetup', 'TestController@newMeetup');
+Route::get('test/list', 'TestController@newList');

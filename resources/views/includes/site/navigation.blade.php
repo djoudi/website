@@ -16,7 +16,7 @@
             <ul class="nav navbar-nav">
                 <li><a href="{{ url('/') }}">Home</a></li>
                 <li><a href="{{ url('meetups') }}">Meetups</a></li>
-                <li><a href="{{ url('awesome') }}">Awesome</a></li>
+                <li><a href="{{ url('awesomes') }}">Awesome</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
                     <ul class="dropdown-menu">
@@ -34,11 +34,11 @@
                 @if(auth()->check())
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            <img style="max-height: 20px;" class="img img-circle" src="{{ auth()->user()->avatar }}" alt="{{ auth()->user()->username }}"> {{ auth()->user()->username }}
+                            <img style="max-height: 20px;" class="img img-circle" src="{{ url(auth()->user()->avatar) }}" alt="{{ auth()->user()->username }}"> {{ auth()->user()->username }}
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a href="#">My Account</a></li>
+                            <li><a href="{{ url('account/update') }}">My Account</a></li>
                             <li><a href="#">My Settings</a></li>
                             <li><a href="#">My Contributions</a></li>
                             <li role="separator" class="divider"></li>

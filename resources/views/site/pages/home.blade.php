@@ -77,76 +77,49 @@
 
     <br/>
 
-    <div class="container">
+    @if($meetups->count() > 0)
+        <div class="container">
 
-        <h3 class="text-center">Recent Meetups</h3>
-        <div class="row">
+            <h3 class="text-center">Recent Meetups</h3>
+            <div class="row">
 
-            @foreach($meetups as $meetup)
-                <div class="col-xs-18 col-sm-6 col-md-3">
-                    <div class="thumbnail">
-                        <img src="{{ $meetup->thumbnail }}" alt="{{ $meetup->title }}">
-                        <div class="caption">
-                            <h4>{{ $meetup->title }}</h4>
-                            <p>{{ $meetup->desc }}</p>
-                            <p><a href="{{ url('meetups/meetup/'.$meetup->getSlug()) }}" class="btn btn-info btn-xs" role="button">Show Meetup</a></p>
+                @foreach($meetups as $meetup)
+                    <div class="col-xs-18 col-sm-6 col-md-3">
+                        <div class="thumbnail">
+                            <img src="{{ $meetup->thumbnail }}" alt="{{ $meetup->title }}">
+                            <div class="caption">
+                                <h4>{{ $meetup->title }}</h4>
+                                <p>{{ $meetup->content }}</p>
+                                <p><a href="{{ url('meetups/meetup/'.$meetup->getSlug()) }}" class="btn btn-info btn-xs" role="button">Show Meetup</a></p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            @endforeach
+                @endforeach
 
+            </div>
         </div>
-    </div>
+    @endif
 
-    <div class="container">
+    @if($awesomes->count() > 0)
+        <div class="container">
 
-        <h3 class="text-center">Recent Tutorials</h3>
-        <div class="row">
+            <h3 class="text-center">Recent Tutorials</h3>
+            <div class="row">
 
-            <div class="col-xs-18 col-sm-6 col-md-3">
-                <div class="thumbnail">
-                    <img src="http://placehold.it/500x300" alt="">
-                    <div class="caption">
-                        <h4>Thumbnail label</h4>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facere, soluta, eligendi doloribus sunt minus amet sit debitis repellat. Consectetur, culpa itaque odio similique suscipit</p>
-                        <p><a href="#" class="btn btn-info btn-xs" role="button">Button</a> <a href="#" class="btn btn-default btn-xs" role="button">Button</a></p>
+                @foreach($awesomes as $awesome)
+                    <div class="col-xs-18 col-sm-6 col-md-3">
+                        <div class="thumbnail">
+                            <img src="{{ $awesome->thumbnail }}" alt="{{ $awesome->title }}">
+                            <div class="caption">
+                                <h4>{{ $awesome->title }}</h4>
+                                <p>{{ $awesome->content }}</p>
+                                <p><a href="{{ url('awesomes/list/'.$awesome->getSlug()) }}" class="btn btn-info btn-xs" role="button">Show Awesome-List</a></p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
+                @endforeach
 
-            <div class="col-xs-18 col-sm-6 col-md-3">
-                <div class="thumbnail">
-                    <img src="http://placehold.it/500x300" alt="">
-                    <div class="caption">
-                        <h4>Thumbnail label</h4>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facere, soluta, eligendi doloribus sunt minus amet sit debitis repellat. Consectetur, culpa itaque odio similique suscipit</p>
-                        <p><a href="#" class="btn btn-info btn-xs" role="button">Button</a> <a href="#" class="btn btn-default btn-xs" role="button">Button</a></p>
-                    </div>
-                </div>
             </div>
-
-            <div class="col-xs-18 col-sm-6 col-md-3">
-                <div class="thumbnail">
-                    <img src="http://placehold.it/500x300" alt="">
-                    <div class="caption">
-                        <h4>Thumbnail label</h4>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facere, soluta, eligendi doloribus sunt minus amet sit debitis repellat. Consectetur, culpa itaque odio similique suscipit</p>
-                        <p><a href="#" class="btn btn-info btn-xs" role="button">Button</a> <a href="#" class="btn btn-default btn-xs" role="button">Button</a></p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xs-18 col-sm-6 col-md-3">
-                <div class="thumbnail">
-                    <img src="http://placehold.it/500x300" alt="">
-                    <div class="caption">
-                        <h4>Thumbnail label</h4>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facere, soluta, eligendi doloribus sunt minus amet sit debitis repellat. Consectetur, culpa itaque odio similique suscipit</p>
-                        <p><a href="#" class="btn btn-info btn-xs" role="button">Button</a> <a href="#" class="btn btn-default btn-xs" role="button">Button</a></p>
-                    </div>
-                </div>
-            </div>
-
         </div>
-    </div>
+    @endif
 @stop

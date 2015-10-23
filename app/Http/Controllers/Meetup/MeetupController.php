@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Meetup;
 
+use App\Meetup;
 use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
@@ -43,12 +44,13 @@ class MeetupController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param $slug
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($slug)
     {
-        //
+        $meetup = Meetup::where('slug', $slug)->first();
+        dd($meetup);
     }
 
     /**
