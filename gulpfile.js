@@ -36,6 +36,7 @@ elixir(function(mix) {
             paths.general + "components/jquery-textcomplete/dist/jquery.textcomplete.js",
             paths.general + "components/Caret.js/dist/jquery.caret.js",
             paths.general + "components/At.js/dist/js/jquery.atwho.js",
+            paths.general + "components/noty/js/noty/packaged/jquery.noty.packaged.js",
             paths.general + "components/typeahead.js/dist/typeahead.jquery.js"
         ], 'public/js/vendor.js')
 

@@ -1,14 +1,26 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar {
+  margin: 0;
+}
+
 .jk-slider{
   width:100%;
+  margin: 0;
+  padding: 0;
 }
 
 .hero {
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: 40%;
   z-index: 3;
   color: #fff;
-  text-align: center;
+  text-align: left;
   text-transform: uppercase;
   text-shadow: 1px 1px 0 rgba(0,0,0,.75);
   -webkit-transform: translate3d(-50%,-50%,0);
@@ -135,4 +147,188 @@
 .dropdown-menu .textcomplete-footer {
   border-top: solid 1px #F0F0F0;
   margin-top: 3px;
+}
+
+.panel-comment {
+  position: relative;
+  border-radius: 0px;
+  border: 1px solid rgb(216, 216, 216);
+  font-family: 'Roboto', sans-serif;
+}
+.panel-comment > .dropdown {
+  position: absolute;
+  top: 5px;
+  right: 15px;
+}
+.panel-comment > .dropdown > span > span {
+  font-size: 10px;
+}
+.panel-comment > .dropdown > .dropdown-menu {
+  left: initial;
+  right: 0px;
+  border-radius: 2px;
+}
+.panel-comment > .panel-comment-tags {
+  position: absolute;
+  top: 35px;
+  right: -3px;
+}
+.panel-comment > .panel-comment-tags > ul {
+  list-style: none;
+  padding: 0px;
+  margin: 0px;
+}
+.panel-comment > .panel-comment-tags > ul:hover {
+  box-shadow: 0px 0px 3px rgb(0, 0, 0);
+  box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.25);
+}
+.panel-comment > .panel-comment-tags > ul > li {
+  display: block;
+  right: 0px;
+  width: 0px;
+  padding: 5px 0px 5px 0px;
+  background-color: rgb(245, 245, 245);
+  font-size: 12px;
+  overflow: hidden;
+}
+.panel-comment > .panel-comment-tags > ul > li::after {
+  content:"";
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  height: 100%;
+  border-right: 3px solid rgb(66, 127, 237);
+}
+.panel-comment > .panel-comment-tags > ul:hover > li,
+.panel-comment > .panel-comment-tags > ul > li:first-child {
+  padding: 5px 15px 5px 10px;
+  width: auto;
+  cursor: pointer;
+  margin-left: auto;
+}
+.panel-comment > .panel-comment-tags > ul:hover > li {
+  background-color: rgb(255, 255, 255);
+}
+.panel-comment > .panel-comment-tags > ul > li:hover {
+  background-color: rgb(66, 127, 237);
+  color: rgb(255, 255, 255);
+}
+.panel-comment > .panel-heading,
+.panel-comment > .panel-footer {
+  background-color: rgb(255, 255, 255);
+  border-width: 0px;
+}
+.panel-comment > .panel-heading {
+  margin-top: 20px;
+  padding-bottom: 5px;
+}
+.panel-comment > .panel-heading > img {
+  margin-right: 15px;
+}
+.panel-comment > .panel-heading > h3 {
+  margin: 0px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.panel-comment > .panel-heading > h5 {
+  color: rgb(153, 153, 153);
+  font-size: 12px;
+  font-weight: 400;
+}
+.panel-comment > .panel-body {
+  padding-top: 5px;
+  font-size: 13px;
+}
+.panel-comment > .panel-body > .panel-comment-image {
+  display: block;
+  text-align: center;
+  background-color: rgb(245, 245, 245);
+  border: 1px solid rgb(217, 217, 217);
+}
+.panel-comment > .panel-body > .panel-comment-image > img {
+  max-width: 100%;
+}
+
+.panel-comment > .panel-footer {
+  font-size: 14px;
+  font-weight: 700;
+  min-height: 54px;
+}
+.panel-comment > .panel-footer > .btn {
+  float: left;
+  margin-right: 8px;
+}
+.panel-comment > .panel-footer > .input-placeholder {
+  display: block;
+  margin-left: 98px;
+  color: rgb(153, 153, 153);
+  font-size: 12px;
+  font-weight: 400;
+  padding: 8px 6px 7px;
+  border: 1px solid rgb(217, 217, 217);
+  border-radius: 2px;
+  box-shadow: rgba(0, 0, 0, 0.0470588) 0px 1px 0px 0px;
+}
+.panel-comment.panel-comment-show-comment > .panel-footer > .input-placeholder {
+  display: none;
+}
+.panel-comment > .panel-comment-comment {
+  display: none;
+  padding: 10px 20px 15px;
+  border-top: 1px solid rgb(229, 229, 229);
+  background-color: rgb(245, 245, 245);
+}
+.panel-comment.panel-comment-show-comment > .panel-comment-comment {
+  display: block;
+}
+/*.panel-comment > .panel-comment-comment > img {
+    float: left;
+}*/
+.panel-comment > .panel-comment-comment > .panel-comment-textarea {
+  float: right;
+  width: calc(100% - 56px);
+}
+.panel-comment > .panel-comment-comment > .panel-comment-textarea > textarea {
+  display: block;
+  /*margin-left: 60px;
+  width: calc(100% - 56px);*/
+  width: 100%;
+  background-color: rgb(255, 255, 255);
+  border: 1px solid rgb(217, 217, 217);
+  box-shadow: rgba(0, 0, 0, 0.0470588) 0px 1px 0px 0px;
+  resize: vertical;
+}
+.panel-comment > .panel-comment-comment > .panel-comment-textarea > .btn {
+  margin-top: 10px;
+  margin-right: 8px;
+  width: 100%;
+}
+@media (min-width: 992px) {
+  .panel-comment > .panel-comment-comment > .panel-comment-textarea > .btn {
+    width: auto;
+  }
+}
+
+.panel-comment .btn {
+  border-radius: 3px;
+}
+.panel-comment .btn-default {
+  border: 1px solid rgb(217, 217, 217);
+  box-shadow: rgba(0, 0, 0, 0.0470588) 0px 1px 0px 0px;
+}
+.panel-comment .btn-default:hover,
+.panel-comment .btn-default:focus,
+.panel-comment .btn-default:active {
+  background-color: rgb(255, 255, 255);
+  border-color: rgb(0, 0, 0);
+}
+
+.thumbnail {
+  position: relative;
+  padding: 0px;
+  margin-bottom: 20px;
+}
+
+.thumbnail img {
+  width: 100%;
 }

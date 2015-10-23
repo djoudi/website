@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Site;
 
+use App\Meetup;
 use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
@@ -9,7 +10,8 @@ use App\Http\Controllers\Controller;
 class PageController extends Controller
 {
     public function home() {
-        return view('site.pages.home');
+        $meetups = Meetup::all()->chunk(4);
+        return view('site.pages.home', compact('meetups'));
     }
 
     public function about() {

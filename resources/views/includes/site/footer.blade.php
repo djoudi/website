@@ -29,14 +29,8 @@
                 <li><a href="#">Job board</a></li>
             </ul>
         </div>
-        <div class="col-xs-3">
-            <ul class="list-unstyled">
-                <li>Documentation<li>
-                <li><a href="#">Product Help</a></li>
-                <li><a href="#">Developer API</a></li>
-                <li><a href="#">Product Markdown</a></li>
-                <li><a href="#">Product Pages</a></li>
-            </ul>
+        <div class="col-xs-3 hidden-xs">
+            <a href="https://mixpanel.com/f/partner" rel="nofollow"><img src="//cdn.mxpnl.com/site_media/images/partner/badge_blue.png" alt="Mobile Analytics" /></a>
         </div>
     </div>
     <hr>

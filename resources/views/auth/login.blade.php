@@ -21,26 +21,23 @@
         <div class="row">
             <div class="col-md-8">
                 {!! Form::open(['url' => 'auth/login', 'method' => 'post']) !!}
-                        <!-- Email Form Input -->
-                <div class="form-group">
-                    {!! Form::label('email', 'Email') !!}
-                    {!! Form::text('email', null, ['class' => 'form-control']) !!}
-                </div>
+                    <div class="form-group">
+                        {!! Form::label('email', 'Email') !!}
+                        {!! Form::text('email', null, ['class' => 'form-control']) !!}
+                    </div>
 
-                <!-- Password Form Input -->
-                <div class="form-group">
-                    {!! Form::label('password', 'Password') !!}
-                    {!! Form::password('password', ['class' => 'form-control']) !!}
-                </div>
+                    <div class="form-group">
+                        {!! Form::label('password', 'Password') !!}
+                        {!! Form::password('password', ['class' => 'form-control']) !!}
+                    </div>
 
-                <div class="form-group">
-                    <input type="checkbox" name="remember"> Remember Me
-                </div>
+                    <div class="form-group">
+                        <input type="checkbox" name="remember"> Remember Me
+                    </div>
 
-                <!-- Login Form Input -->
-                <div class="form-group">
-                    {!! Form::submit('Login', ['class' => 'form-control']) !!}
-                </div>
+                    <div class="form-group">
+                        {!! Form::submit('Login', ['class' => 'form-control']) !!}
+                    </div>
                 {!! Form::close() !!}
             </div>
 

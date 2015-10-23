@@ -62,12 +62,12 @@
                                         {!! Form::open(['url' => 'auth/login', 'method' => 'post']) !!}
                                             <div class="form-group">
                                                 <label class="sr-only" for="email">Email address</label>
-                                                <input type="email" class="form-control" id="email" placeholder="Email address" required>
+                                                <input type="email" class="form-control" id="email" name="email" placeholder="Email address" required>
                                             </div>
                                             <div class="form-group">
                                                 <label class="sr-only" for="password">Password</label>
-                                                <input type="password" class="form-control" id="password" placeholder="Password" required>
-                                                <div class="help-block text-right"><a href="">Forget the password ?</a></div>
+                                                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                                                <div class="help-block text-right"><a href="{{ url('password/email') }}">Forget the password ?</a></div>
                                             </div>
                                             <div class="form-group">
                                                 <button type="submit" class="btn btn-primary btn-block">Sign in</button>
@@ -80,7 +80,7 @@
                                         {!! Form::close() !!}
                                     </div>
                                     <div class="bottom text-center">
-                                        New here ? <a href="#"><b>Join Us</b></a>
+                                        New here ? <a href="{{ url('auth/register') }}"><b>Join Us</b></a>
                                     </div>
                                 </div>
                             </li>

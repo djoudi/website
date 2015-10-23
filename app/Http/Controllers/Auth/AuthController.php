@@ -51,6 +51,8 @@ class AuthController extends Controller
         return Validator::make($data, [
             'name' => 'required|max:255',
             'email' => 'required|email|max:255|unique:users',
+            'github_id' => 'unique:users',
+            'twitter_id' => 'unique:users',
             'password' => 'required|confirmed|min:6',
         ]);
     }
@@ -66,6 +68,10 @@ class AuthController extends Controller
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'username' => $data['username'],
+            'github_id' => $data['github_id'],
+            'twitter_id' => $data['twitter_id'],
+            'avatar' => $data['avatar'],
             'password' => bcrypt($data['password']),
         ]);
     }
@@ -89,8 +95,12 @@ class AuthController extends Controller
     {
         try {
             $user = Socialite::driver('github')->user();
+            session()->put('comp_name', $user->name);
+            session()->put('comp_username', $user->nickname);
+            session()->put('comp_avatar', $user->avatar);
+            session()->put('comp_github_id', $user->id);
         } catch (Exception $e) {
-            return Redirect::to('auth/github');
+            return redirect('auth/complete');
         }
 
         $authUser = $this->findOrCreateGithubUser($user);
@@ -122,7 +132,7 @@ class AuthController extends Controller
 
         return User::create([
             'name' => $githubUser->name,
-            'username' => $githubUser->name,
+            'username' => $githubUser->nickname,
             'email' => $githubUser->email,
             'github_id' => $githubUser->id,
             'avatar' => $githubUser->avatar
@@ -148,20 +158,17 @@ class AuthController extends Controller
     {
         try {
             $user = Socialite::driver('twitter')->user();
-        } catch (Exception $e) {
-            return Redirect::to('auth/twitter');
-        }
-//        dd($user);
-
-        $authUser = $this->findOrCreateTwitterUser($user);
-
-        if(!$user->email) {
             session()->put('comp_name', $user->name);
             session()->put('comp_username', $user->nickname);
             session()->put('comp_avatar', $user->avatar);
             session()->put('comp_twitter_id', $user->id);
+        } catch (Exception $e) {
             return redirect('auth/complete');
         }
+
+
+
+        $authUser = $this->findOrCreateTwitterUser($user);
 
         Auth::login($authUser, true);
 
@@ -176,26 +183,19 @@ class AuthController extends Controller
      */
     private function findOrCreateTwitterUser($twitterUser)
     {
-        if(!$twitterUser->email) {
-
-            return redirect('auth/complete');
-        }
-
         if ($authUser = User::where('twitter_id', $twitterUser->id)->first()) {
             return $authUser;
         }
 
-        return User::create([
-            'name' => $twitterUser->name,
-            'username' => $twitterUser->nickname,
-            'email' => $twitterUser->email,
-            'twitter_id' => $twitterUser->id,
-            'avatar' => $twitterUser->avatar
-        ]);
+        session()->put('comp_name', $twitterUser->name);
+        session()->put('comp_username', $twitterUser->nickname);
+        session()->put('comp_avatar', $twitterUser->avatar);
+        session()->put('comp_twitter_id', $twitterUser->id);
+
+        return redirect('auth/complete');
     }
 
     public function getComplete() {
-        alert()->success('Success Message', 'Optional Title');
         return view('auth.complete');
     }
 

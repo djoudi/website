@@ -13,7 +13,7 @@
 @stop
 
 @section('content')
-    <section class="jk-slider">
+    <section class="jk-slider hidden-xs">
         <div id="carousel-example" class="carousel slide" data-ride="carousel">
             <ol class="carousel-indicators">
                 <li data-target="#carousel-example" data-slide-to="0" class="active"></li>
@@ -75,15 +75,78 @@
 
     </section>
 
+    <br/>
+
     <div class="container">
 
-        {!! Form::open(['url' => 'api/post', 'method' => 'post']) !!}
-            <textarea class="form-control" rows="5" id="autocomplete-textarea" name="post"></textarea>
+        <h3 class="text-center">Recent Meetups</h3>
+        <div class="row">
 
-        <!-- Post Form Input -->
-        <div class="form-group">
-            {!! Form::submit('Post', ['class' => 'form-control']) !!}
+            @foreach($meetups as $meetup)
+                <div class="col-xs-18 col-sm-6 col-md-3">
+                    <div class="thumbnail">
+                        <img src="{{ $meetup->thumbnail }}" alt="{{ $meetup->title }}">
+                        <div class="caption">
+                            <h4>{{ $meetup->title }}</h4>
+                            <p>{{ $meetup->desc }}</p>
+                            <p><a href="{{ url('meetups/meetup/'.$meetup->getSlug()) }}" class="btn btn-info btn-xs" role="button">Show Meetup</a></p>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+
         </div>
-        {!! Form::close() !!}
+    </div>
+
+    <div class="container">
+
+        <h3 class="text-center">Recent Tutorials</h3>
+        <div class="row">
+
+            <div class="col-xs-18 col-sm-6 col-md-3">
+                <div class="thumbnail">
+                    <img src="http://placehold.it/500x300" alt="">
+                    <div class="caption">
+                        <h4>Thumbnail label</h4>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facere, soluta, eligendi doloribus sunt minus amet sit debitis repellat. Consectetur, culpa itaque odio similique suscipit</p>
+                        <p><a href="#" class="btn btn-info btn-xs" role="button">Button</a> <a href="#" class="btn btn-default btn-xs" role="button">Button</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xs-18 col-sm-6 col-md-3">
+                <div class="thumbnail">
+                    <img src="http://placehold.it/500x300" alt="">
+                    <div class="caption">
+                        <h4>Thumbnail label</h4>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facere, soluta, eligendi doloribus sunt minus amet sit debitis repellat. Consectetur, culpa itaque odio similique suscipit</p>
+                        <p><a href="#" class="btn btn-info btn-xs" role="button">Button</a> <a href="#" class="btn btn-default btn-xs" role="button">Button</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xs-18 col-sm-6 col-md-3">
+                <div class="thumbnail">
+                    <img src="http://placehold.it/500x300" alt="">
+                    <div class="caption">
+                        <h4>Thumbnail label</h4>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facere, soluta, eligendi doloribus sunt minus amet sit debitis repellat. Consectetur, culpa itaque odio similique suscipit</p>
+                        <p><a href="#" class="btn btn-info btn-xs" role="button">Button</a> <a href="#" class="btn btn-default btn-xs" role="button">Button</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xs-18 col-sm-6 col-md-3">
+                <div class="thumbnail">
+                    <img src="http://placehold.it/500x300" alt="">
+                    <div class="caption">
+                        <h4>Thumbnail label</h4>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facere, soluta, eligendi doloribus sunt minus amet sit debitis repellat. Consectetur, culpa itaque odio similique suscipit</p>
+                        <p><a href="#" class="btn btn-info btn-xs" role="button">Button</a> <a href="#" class="btn btn-default btn-xs" role="button">Button</a></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 @stop
