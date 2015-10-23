@@ -15,8 +15,8 @@
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li><a href="{{ url('/') }}">Home</a></li>
-                <li><a href="{{ url('/') }}">About</a></li>
-                <li><a href="{{ url('/') }}">Contact</a></li>
+                <li><a href="{{ url('meetups') }}">Meetups</a></li>
+                <li><a href="{{ url('awesome') }}">Awesome</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
                     <ul class="dropdown-menu">
@@ -33,11 +33,14 @@
             <ul class="nav navbar-nav navbar-right">
                 @if(auth()->check())
                     <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <img style="max-height: 20px;" class="img img-circle" src="{{ auth()->user()->avatar }}" alt="{{ auth()->user()->username }}"> {{ auth()->user()->username }}
+                            <span class="caret"></span>
+                        </a>
                         <ul class="dropdown-menu">
-                            <li><a href="#">Action</a></li>
-                            <li><a href="#">Another action</a></li>
-                            <li><a href="#">Something else here</a></li>
+                            <li><a href="#">My Account</a></li>
+                            <li><a href="#">My Settings</a></li>
+                            <li><a href="#">My Contributions</a></li>
                             <li role="separator" class="divider"></li>
                             <li><a href="{{ url('auth/logout') }}">Logout</a></li>
                         </ul>

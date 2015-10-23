@@ -23,7 +23,8 @@ elixir(function(mix) {
             paths.bootstrap + "css/bootstrap.css",
             paths.fontawesome + "css/font-awesome.css",
             paths.sweetalert + "sweetalert.css",
-            paths.general + "components/lity/dist/lity.css"
+            paths.general + "components/lity/dist/lity.css",
+            paths.general + "components/At.js/dist/css/jquery.atwho.css"
         ], 'public/css/vendor.css')
 
         .scripts([
@@ -32,6 +33,9 @@ elixir(function(mix) {
             paths.sweetalert + "sweetalert-dev.js",
             paths.bootstrap + "js/bootstrap.js",
             paths.general + "components/lity/dist/lity.js",
+            paths.general + "components/jquery-textcomplete/dist/jquery.textcomplete.js",
+            paths.general + "components/Caret.js/dist/jquery.caret.js",
+            paths.general + "components/At.js/dist/js/jquery.atwho.js",
             paths.general + "components/typeahead.js/dist/typeahead.jquery.js"
         ], 'public/js/vendor.js')
 

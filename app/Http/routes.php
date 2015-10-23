@@ -38,3 +38,14 @@ Route::group(['prefix' => 'meetups'], function () {
     Route::get('meetup/{slug}', 'Meetup\MeetupController@show');
     Route::get('meetup/{slug}/attendees', 'Meetup\AttendeeController@show');
 });
+
+Route::group(['prefix' => 'awesome'], function () {
+    Route::get('/', 'Awesome\AwesomeController@index');
+    Route::get('meetup/{slug}', 'Awesome\AwesomeController@show');
+});
+
+Route::post('api/mentions', 'Site\ApiController@mention');
+Route::get('api/mentions', 'Site\ApiController@mention');
+
+Route::post('api/post', 'Site\ApiController@timePost');
+Route::get('api/post', 'Site\ApiController@timePost');

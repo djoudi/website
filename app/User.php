@@ -40,4 +40,5 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     protected $hidden = ['password', 'remember_token'];
 
     protected $dates = ['trial_ends_at', 'subscription_ends_at'];
+
 }

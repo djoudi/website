@@ -23494,6 +23494,2771 @@ if (typeof jQuery === 'undefined') {
     return lity;
 }));
 
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(['jquery'], factory);
+  } else if (typeof module === "object" && module.exports) {
+    var $ = require('jquery');
+    module.exports = factory($);
+  } else {
+    // Browser globals
+    factory(jQuery);
+  }
+}(function (jQuery) {
+
+/*!
+ * jQuery.textcomplete
+ *
+ * Repository: https://github.com/yuku-t/jquery-textcomplete
+ * License:    MIT (https://github.com/yuku-t/jquery-textcomplete/blob/master/LICENSE)
+ * Author:     Yuku Takahashi
+ */
+
+if (typeof jQuery === 'undefined') {
+  throw new Error('jQuery.textcomplete requires jQuery');
+}
+
++function ($) {
+  'use strict';
+
+  var warn = function (message) {
+    if (console.warn) { console.warn(message); }
+  };
+
+  var id = 1;
+
+  $.fn.textcomplete = function (strategies, option) {
+    var args = Array.prototype.slice.call(arguments);
+    return this.each(function () {
+      var self = this;
+      var $this = $(this);
+      var completer = $this.data('textComplete');
+      if (!completer) {
+        option || (option = {});
+        option._oid = id++;  // unique object id
+        completer = new $.fn.textcomplete.Completer(this, option);
+        $this.data('textComplete', completer);
+      }
+      if (typeof strategies === 'string') {
+        if (!completer) return;
+        args.shift()
+        completer[strategies].apply(completer, args);
+        if (strategies === 'destroy') {
+          $this.removeData('textComplete');
+        }
+      } else {
+        // For backward compatibility.
+        // TODO: Remove at v0.4
+        $.each(strategies, function (obj) {
+          $.each(['header', 'footer', 'placement', 'maxCount'], function (name) {
+            if (obj[name]) {
+              completer.option[name] = obj[name];
+              warn(name + 'as a strategy param is deprecated. Use option.');
+              delete obj[name];
+            }
+          });
+        });
+        completer.register($.fn.textcomplete.Strategy.parse(strategies, {
+          el: self,
+          $el: $this
+        }));
+      }
+    });
+  };
+
+}(jQuery);
+
++function ($) {
+  'use strict';
+
+  // Exclusive execution control utility.
+  //
+  // func - The function to be locked. It is executed with a function named
+  //        `free` as the first argument. Once it is called, additional
+  //        execution are ignored until the free is invoked. Then the last
+  //        ignored execution will be replayed immediately.
+  //
+  // Examples
+  //
+  //   var lockedFunc = lock(function (free) {
+  //     setTimeout(function { free(); }, 1000); // It will be free in 1 sec.
+  //     console.log('Hello, world');
+  //   });
+  //   lockedFunc();  // => 'Hello, world'
+  //   lockedFunc();  // none
+  //   lockedFunc();  // none
+  //   // 1 sec past then
+  //   // => 'Hello, world'
+  //   lockedFunc();  // => 'Hello, world'
+  //   lockedFunc();  // none
+  //
+  // Returns a wrapped function.
+  var lock = function (func) {
+    var locked, queuedArgsToReplay;
+
+    return function () {
+      // Convert arguments into a real array.
+      var args = Array.prototype.slice.call(arguments);
+      if (locked) {
+        // Keep a copy of this argument list to replay later.
+        // OK to overwrite a previous value because we only replay
+        // the last one.
+        queuedArgsToReplay = args;
+        return;
+      }
+      locked = true;
+      var self = this;
+      args.unshift(function replayOrFree() {
+        if (queuedArgsToReplay) {
+          // Other request(s) arrived while we were locked.
+          // Now that the lock is becoming available, replay
+          // the latest such request, then call back here to
+          // unlock (or replay another request that arrived
+          // while this one was in flight).
+          var replayArgs = queuedArgsToReplay;
+          queuedArgsToReplay = undefined;
+          replayArgs.unshift(replayOrFree);
+          func.apply(self, replayArgs);
+        } else {
+          locked = false;
+        }
+      });
+      func.apply(this, args);
+    };
+  };
+
+  var isString = function (obj) {
+    return Object.prototype.toString.call(obj) === '[object String]';
+  };
+
+  var isFunction = function (obj) {
+    return Object.prototype.toString.call(obj) === '[object Function]';
+  };
+
+  var uniqueId = 0;
+
+  function Completer(element, option) {
+    this.$el        = $(element);
+    this.id         = 'textcomplete' + uniqueId++;
+    this.strategies = [];
+    this.views      = [];
+    this.option     = $.extend({}, Completer._getDefaults(), option);
+
+    if (!this.$el.is('input[type=text]') && !this.$el.is('textarea') && !element.isContentEditable && element.contentEditable != 'true') {
+      throw new Error('textcomplete must be called on a Textarea or a ContentEditable.');
+    }
+
+    if (element === document.activeElement) {
+      // element has already been focused. Initialize view objects immediately.
+      this.initialize()
+    } else {
+      // Initialize view objects lazily.
+      var self = this;
+      this.$el.one('focus.' + this.id, function () { self.initialize(); });
+    }
+  }
+
+  Completer._getDefaults = function () {
+    if (!Completer.DEFAULTS) {
+      Completer.DEFAULTS = {
+        appendTo: $('body'),
+        zIndex: '100'
+      };
+    }
+
+    return Completer.DEFAULTS;
+  }
+
+  $.extend(Completer.prototype, {
+    // Public properties
+    // -----------------
+
+    id:         null,
+    option:     null,
+    strategies: null,
+    adapter:    null,
+    dropdown:   null,
+    $el:        null,
+
+    // Public methods
+    // --------------
+
+    initialize: function () {
+      var element = this.$el.get(0);
+      // Initialize view objects.
+      this.dropdown = new $.fn.textcomplete.Dropdown(element, this, this.option);
+      var Adapter, viewName;
+      if (this.option.adapter) {
+        Adapter = this.option.adapter;
+      } else {
+        if (this.$el.is('textarea') || this.$el.is('input[type=text]')) {
+          viewName = typeof element.selectionEnd === 'number' ? 'Textarea' : 'IETextarea';
+        } else {
+          viewName = 'ContentEditable';
+        }
+        Adapter = $.fn.textcomplete[viewName];
+      }
+      this.adapter = new Adapter(element, this, this.option);
+    },
+
+    destroy: function () {
+      this.$el.off('.' + this.id);
+      if (this.adapter) {
+        this.adapter.destroy();
+      }
+      if (this.dropdown) {
+        this.dropdown.destroy();
+      }
+      this.$el = this.adapter = this.dropdown = null;
+    },
+
+    // Invoke textcomplete.
+    trigger: function (text, skipUnchangedTerm) {
+      if (!this.dropdown) { this.initialize(); }
+      text != null || (text = this.adapter.getTextFromHeadToCaret());
+      var searchQuery = this._extractSearchQuery(text);
+      if (searchQuery.length) {
+        var term = searchQuery[1];
+        // Ignore shift-key, ctrl-key and so on.
+        if (skipUnchangedTerm && this._term === term) { return; }
+        this._term = term;
+        this._search.apply(this, searchQuery);
+      } else {
+        this._term = null;
+        this.dropdown.deactivate();
+      }
+    },
+
+    fire: function (eventName) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      this.$el.trigger(eventName, args);
+      return this;
+    },
+
+    register: function (strategies) {
+      Array.prototype.push.apply(this.strategies, strategies);
+    },
+
+    // Insert the value into adapter view. It is called when the dropdown is clicked
+    // or selected.
+    //
+    // value    - The selected element of the array callbacked from search func.
+    // strategy - The Strategy object.
+    // e        - Click or keydown event object.
+    select: function (value, strategy, e) {
+      this._term = null;
+      this.adapter.select(value, strategy, e);
+      this.fire('change').fire('textComplete:select', value, strategy);
+      this.adapter.focus();
+    },
+
+    // Private properties
+    // ------------------
+
+    _clearAtNext: true,
+    _term:        null,
+
+    // Private methods
+    // ---------------
+
+    // Parse the given text and extract the first matching strategy.
+    //
+    // Returns an array including the strategy, the query term and the match
+    // object if the text matches an strategy; otherwise returns an empty array.
+    _extractSearchQuery: function (text) {
+      for (var i = 0; i < this.strategies.length; i++) {
+        var strategy = this.strategies[i];
+        var context = strategy.context(text);
+        if (context || context === '') {
+          var matchRegexp = isFunction(strategy.match) ? strategy.match(text) : strategy.match;
+          if (isString(context)) { text = context; }
+          var match = text.match(matchRegexp);
+          if (match) { return [strategy, match[strategy.index], match]; }
+        }
+      }
+      return []
+    },
+
+    // Call the search method of selected strategy..
+    _search: lock(function (free, strategy, term, match) {
+      var self = this;
+      strategy.search(term, function (data, stillSearching) {
+        if (!self.dropdown.shown) {
+          self.dropdown.activate();
+        }
+        if (self._clearAtNext) {
+          // The first callback in the current lock.
+          self.dropdown.clear();
+          self._clearAtNext = false;
+        }
+        self.dropdown.setPosition(self.adapter.getCaretPosition());
+        self.dropdown.render(self._zip(data, strategy, term));
+        if (!stillSearching) {
+          // The last callback in the current lock.
+          free();
+          self._clearAtNext = true; // Call dropdown.clear at the next time.
+        }
+      }, match);
+    }),
+
+    // Build a parameter for Dropdown#render.
+    //
+    // Examples
+    //
+    //  this._zip(['a', 'b'], 's');
+    //  //=> [{ value: 'a', strategy: 's' }, { value: 'b', strategy: 's' }]
+    _zip: function (data, strategy, term) {
+      return $.map(data, function (value) {
+        return { value: value, strategy: strategy, term: term };
+      });
+    }
+  });
+
+  $.fn.textcomplete.Completer = Completer;
+}(jQuery);
+
++function ($) {
+  'use strict';
+
+  var $window = $(window);
+
+  var include = function (zippedData, datum) {
+    var i, elem;
+    var idProperty = datum.strategy.idProperty
+    for (i = 0; i < zippedData.length; i++) {
+      elem = zippedData[i];
+      if (elem.strategy !== datum.strategy) continue;
+      if (idProperty) {
+        if (elem.value[idProperty] === datum.value[idProperty]) return true;
+      } else {
+        if (elem.value === datum.value) return true;
+      }
+    }
+    return false;
+  };
+
+  var dropdownViews = {};
+  $(document).on('click', function (e) {
+    var id = e.originalEvent && e.originalEvent.keepTextCompleteDropdown;
+    $.each(dropdownViews, function (key, view) {
+      if (key !== id) { view.deactivate(); }
+    });
+  });
+
+  var commands = {
+    SKIP_DEFAULT: 0,
+    KEY_UP: 1,
+    KEY_DOWN: 2,
+    KEY_ENTER: 3,
+    KEY_PAGEUP: 4,
+    KEY_PAGEDOWN: 5,
+    KEY_ESCAPE: 6
+  };
+
+  // Dropdown view
+  // =============
+
+  // Construct Dropdown object.
+  //
+  // element - Textarea or contenteditable element.
+  function Dropdown(element, completer, option) {
+    this.$el       = Dropdown.createElement(option);
+    this.completer = completer;
+    this.id        = completer.id + 'dropdown';
+    this._data     = []; // zipped data.
+    this.$inputEl  = $(element);
+    this.option    = option;
+
+    // Override setPosition method.
+    if (option.listPosition) { this.setPosition = option.listPosition; }
+    if (option.height) { this.$el.height(option.height); }
+    var self = this;
+    $.each(['maxCount', 'placement', 'footer', 'header', 'noResultsMessage', 'className'], function (_i, name) {
+      if (option[name] != null) { self[name] = option[name]; }
+    });
+    this._bindEvents(element);
+    dropdownViews[this.id] = this;
+  }
+
+  $.extend(Dropdown, {
+    // Class methods
+    // -------------
+
+    createElement: function (option) {
+      var $parent = option.appendTo;
+      if (!($parent instanceof $)) { $parent = $($parent); }
+      var $el = $('<ul></ul>')
+        .addClass('dropdown-menu textcomplete-dropdown')
+        .attr('id', 'textcomplete-dropdown-' + option._oid)
+        .css({
+          display: 'none',
+          left: 0,
+          position: 'absolute',
+          zIndex: option.zIndex
+        })
+        .appendTo($parent);
+      return $el;
+    }
+  });
+
+  $.extend(Dropdown.prototype, {
+    // Public properties
+    // -----------------
+
+    $el:       null,  // jQuery object of ul.dropdown-menu element.
+    $inputEl:  null,  // jQuery object of target textarea.
+    completer: null,
+    footer:    null,
+    header:    null,
+    id:        null,
+    maxCount:  10,
+    placement: '',
+    shown:     false,
+    data:      [],     // Shown zipped data.
+    className: '',
+
+    // Public methods
+    // --------------
+
+    destroy: function () {
+      // Don't remove $el because it may be shared by several textcompletes.
+      this.deactivate();
+
+      this.$el.off('.' + this.id);
+      this.$inputEl.off('.' + this.id);
+      this.clear();
+      this.$el = this.$inputEl = this.completer = null;
+      delete dropdownViews[this.id]
+    },
+
+    render: function (zippedData) {
+      var contentsHtml = this._buildContents(zippedData);
+      var unzippedData = $.map(this.data, function (d) { return d.value; });
+      if (this.data.length) {
+        this._renderHeader(unzippedData);
+        this._renderFooter(unzippedData);
+        if (contentsHtml) {
+          this._renderContents(contentsHtml);
+          this._fitToBottom();
+          this._activateIndexedItem();
+        }
+        this._setScroll();
+      } else if (this.noResultsMessage) {
+        this._renderNoResultsMessage(unzippedData);
+      } else if (this.shown) {
+        this.deactivate();
+      }
+    },
+
+    setPosition: function (pos) {
+      this.$el.css(this._applyPlacement(pos));
+
+      // Make the dropdown fixed if the input is also fixed
+      // This can't be done during init, as textcomplete may be used on multiple elements on the same page
+      // Because the same dropdown is reused behind the scenes, we need to recheck every time the dropdown is showed
+      var position = 'absolute';
+      // Check if input or one of its parents has positioning we need to care about
+      this.$inputEl.add(this.$inputEl.parents()).each(function() {
+        if($(this).css('position') === 'absolute') // The element has absolute positioning, so it's all OK
+          return false;
+        if($(this).css('position') === 'fixed') {
+          position = 'fixed';
+          return false;
+        }
+      });
+      this.$el.css({ position: position }); // Update positioning
+
+      return this;
+    },
+
+    clear: function () {
+      this.$el.html('');
+      this.data = [];
+      this._index = 0;
+      this._$header = this._$footer = this._$noResultsMessage = null;
+    },
+
+    activate: function () {
+      if (!this.shown) {
+        this.clear();
+        this.$el.show();
+        if (this.className) { this.$el.addClass(this.className); }
+        this.completer.fire('textComplete:show');
+        this.shown = true;
+      }
+      return this;
+    },
+
+    deactivate: function () {
+      if (this.shown) {
+        this.$el.hide();
+        if (this.className) { this.$el.removeClass(this.className); }
+        this.completer.fire('textComplete:hide');
+        this.shown = false;
+      }
+      return this;
+    },
+
+    isUp: function (e) {
+      return e.keyCode === 38 || (e.ctrlKey && e.keyCode === 80);  // UP, Ctrl-P
+    },
+
+    isDown: function (e) {
+      return e.keyCode === 40 || (e.ctrlKey && e.keyCode === 78);  // DOWN, Ctrl-N
+    },
+
+    isEnter: function (e) {
+      var modifiers = e.ctrlKey || e.altKey || e.metaKey || e.shiftKey;
+      return !modifiers && (e.keyCode === 13 || e.keyCode === 9 || (this.option.completeOnSpace === true && e.keyCode === 32))  // ENTER, TAB
+    },
+
+    isPageup: function (e) {
+      return e.keyCode === 33;  // PAGEUP
+    },
+
+    isPagedown: function (e) {
+      return e.keyCode === 34;  // PAGEDOWN
+    },
+
+    isEscape: function (e) {
+      return e.keyCode === 27;  // ESCAPE
+    },
+
+    // Private properties
+    // ------------------
+
+    _data:    null,  // Currently shown zipped data.
+    _index:   null,
+    _$header: null,
+    _$noResultsMessage: null,
+    _$footer: null,
+
+    // Private methods
+    // ---------------
+
+    _bindEvents: function () {
+      this.$el.on('mousedown.' + this.id, '.textcomplete-item', $.proxy(this._onClick, this));
+      this.$el.on('touchstart.' + this.id, '.textcomplete-item', $.proxy(this._onClick, this));
+      this.$el.on('mouseover.' + this.id, '.textcomplete-item', $.proxy(this._onMouseover, this));
+      this.$inputEl.on('keydown.' + this.id, $.proxy(this._onKeydown, this));
+    },
+
+    _onClick: function (e) {
+      var $el = $(e.target);
+      e.preventDefault();
+      e.originalEvent.keepTextCompleteDropdown = this.id;
+      if (!$el.hasClass('textcomplete-item')) {
+        $el = $el.closest('.textcomplete-item');
+      }
+      var datum = this.data[parseInt($el.data('index'), 10)];
+      this.completer.select(datum.value, datum.strategy, e);
+      var self = this;
+      // Deactive at next tick to allow other event handlers to know whether
+      // the dropdown has been shown or not.
+      setTimeout(function () {
+        self.deactivate();
+        if (e.type === 'touchstart') {
+          self.$inputEl.focus();
+        }
+      }, 0);
+    },
+
+    // Activate hovered item.
+    _onMouseover: function (e) {
+      var $el = $(e.target);
+      e.preventDefault();
+      if (!$el.hasClass('textcomplete-item')) {
+        $el = $el.closest('.textcomplete-item');
+      }
+      this._index = parseInt($el.data('index'), 10);
+      this._activateIndexedItem();
+    },
+
+    _onKeydown: function (e) {
+      if (!this.shown) { return; }
+
+      var command;
+
+      if ($.isFunction(this.option.onKeydown)) {
+        command = this.option.onKeydown(e, commands);
+      }
+
+      if (command == null) {
+        command = this._defaultKeydown(e);
+      }
+
+      switch (command) {
+        case commands.KEY_UP:
+          e.preventDefault();
+          this._up();
+          break;
+        case commands.KEY_DOWN:
+          e.preventDefault();
+          this._down();
+          break;
+        case commands.KEY_ENTER:
+          e.preventDefault();
+          this._enter(e);
+          break;
+        case commands.KEY_PAGEUP:
+          e.preventDefault();
+          this._pageup();
+          break;
+        case commands.KEY_PAGEDOWN:
+          e.preventDefault();
+          this._pagedown();
+          break;
+        case commands.KEY_ESCAPE:
+          e.preventDefault();
+          this.deactivate();
+          break;
+      }
+    },
+
+    _defaultKeydown: function (e) {
+      if (this.isUp(e)) {
+        return commands.KEY_UP;
+      } else if (this.isDown(e)) {
+        return commands.KEY_DOWN;
+      } else if (this.isEnter(e)) {
+        return commands.KEY_ENTER;
+      } else if (this.isPageup(e)) {
+        return commands.KEY_PAGEUP;
+      } else if (this.isPagedown(e)) {
+        return commands.KEY_PAGEDOWN;
+      } else if (this.isEscape(e)) {
+        return commands.KEY_ESCAPE;
+      }
+    },
+
+    _up: function () {
+      if (this._index === 0) {
+        this._index = this.data.length - 1;
+      } else {
+        this._index -= 1;
+      }
+      this._activateIndexedItem();
+      this._setScroll();
+    },
+
+    _down: function () {
+      if (this._index === this.data.length - 1) {
+        this._index = 0;
+      } else {
+        this._index += 1;
+      }
+      this._activateIndexedItem();
+      this._setScroll();
+    },
+
+    _enter: function (e) {
+      var datum = this.data[parseInt(this._getActiveElement().data('index'), 10)];
+      this.completer.select(datum.value, datum.strategy, e);
+      this.deactivate();
+    },
+
+    _pageup: function () {
+      var target = 0;
+      var threshold = this._getActiveElement().position().top - this.$el.innerHeight();
+      this.$el.children().each(function (i) {
+        if ($(this).position().top + $(this).outerHeight() > threshold) {
+          target = i;
+          return false;
+        }
+      });
+      this._index = target;
+      this._activateIndexedItem();
+      this._setScroll();
+    },
+
+    _pagedown: function () {
+      var target = this.data.length - 1;
+      var threshold = this._getActiveElement().position().top + this.$el.innerHeight();
+      this.$el.children().each(function (i) {
+        if ($(this).position().top > threshold) {
+          target = i;
+          return false
+        }
+      });
+      this._index = target;
+      this._activateIndexedItem();
+      this._setScroll();
+    },
+
+    _activateIndexedItem: function () {
+      this.$el.find('.textcomplete-item.active').removeClass('active');
+      this._getActiveElement().addClass('active');
+    },
+
+    _getActiveElement: function () {
+      return this.$el.children('.textcomplete-item:nth(' + this._index + ')');
+    },
+
+    _setScroll: function () {
+      var $activeEl = this._getActiveElement();
+      var itemTop = $activeEl.position().top;
+      var itemHeight = $activeEl.outerHeight();
+      var visibleHeight = this.$el.innerHeight();
+      var visibleTop = this.$el.scrollTop();
+      if (this._index === 0 || this._index == this.data.length - 1 || itemTop < 0) {
+        this.$el.scrollTop(itemTop + visibleTop);
+      } else if (itemTop + itemHeight > visibleHeight) {
+        this.$el.scrollTop(itemTop + itemHeight + visibleTop - visibleHeight);
+      }
+    },
+
+    _buildContents: function (zippedData) {
+      var datum, i, index;
+      var html = '';
+      for (i = 0; i < zippedData.length; i++) {
+        if (this.data.length === this.maxCount) break;
+        datum = zippedData[i];
+        if (include(this.data, datum)) { continue; }
+        index = this.data.length;
+        this.data.push(datum);
+        html += '<li class="textcomplete-item" data-index="' + index + '"><a>';
+        html +=   datum.strategy.template(datum.value, datum.term);
+        html += '</a></li>';
+      }
+      return html;
+    },
+
+    _renderHeader: function (unzippedData) {
+      if (this.header) {
+        if (!this._$header) {
+          this._$header = $('<li class="textcomplete-header"></li>').prependTo(this.$el);
+        }
+        var html = $.isFunction(this.header) ? this.header(unzippedData) : this.header;
+        this._$header.html(html);
+      }
+    },
+
+    _renderFooter: function (unzippedData) {
+      if (this.footer) {
+        if (!this._$footer) {
+          this._$footer = $('<li class="textcomplete-footer"></li>').appendTo(this.$el);
+        }
+        var html = $.isFunction(this.footer) ? this.footer(unzippedData) : this.footer;
+        this._$footer.html(html);
+      }
+    },
+
+    _renderNoResultsMessage: function (unzippedData) {
+      if (this.noResultsMessage) {
+        if (!this._$noResultsMessage) {
+          this._$noResultsMessage = $('<li class="textcomplete-no-results-message"></li>').appendTo(this.$el);
+        }
+        var html = $.isFunction(this.noResultsMessage) ? this.noResultsMessage(unzippedData) : this.noResultsMessage;
+        this._$noResultsMessage.html(html);
+      }
+    },
+
+    _renderContents: function (html) {
+      if (this._$footer) {
+        this._$footer.before(html);
+      } else {
+        this.$el.append(html);
+      }
+    },
+
+    _fitToBottom: function() {
+      var windowScrollBottom = $window.scrollTop() + $window.height();
+      var height = this.$el.height();
+      if ((this.$el.position().top + height) > windowScrollBottom) {
+        this.$el.offset({top: windowScrollBottom - height});
+      }
+    },
+
+    _applyPlacement: function (position) {
+      // If the 'placement' option set to 'top', move the position above the element.
+      if (this.placement.indexOf('top') !== -1) {
+        // Overwrite the position object to set the 'bottom' property instead of the top.
+        position = {
+          top: 'auto',
+          bottom: this.$el.parent().height() - position.top + position.lineHeight,
+          left: position.left
+        };
+      } else {
+        position.bottom = 'auto';
+        delete position.lineHeight;
+      }
+      if (this.placement.indexOf('absleft') !== -1) {
+        position.left = 0;
+      } else if (this.placement.indexOf('absright') !== -1) {
+        position.right = 0;
+        position.left = 'auto';
+      }
+      return position;
+    }
+  });
+
+  $.fn.textcomplete.Dropdown = Dropdown;
+  $.extend($.fn.textcomplete, commands);
+}(jQuery);
+
++function ($) {
+  'use strict';
+
+  // Memoize a search function.
+  var memoize = function (func) {
+    var memo = {};
+    return function (term, callback) {
+      if (memo[term]) {
+        callback(memo[term]);
+      } else {
+        func.call(this, term, function (data) {
+          memo[term] = (memo[term] || []).concat(data);
+          callback.apply(null, arguments);
+        });
+      }
+    };
+  };
+
+  function Strategy(options) {
+    $.extend(this, options);
+    if (this.cache) { this.search = memoize(this.search); }
+  }
+
+  Strategy.parse = function (strategiesArray, params) {
+    return $.map(strategiesArray, function (strategy) {
+      var strategyObj = new Strategy(strategy);
+      strategyObj.el = params.el;
+      strategyObj.$el = params.$el;
+      return strategyObj;
+    });
+  };
+
+  $.extend(Strategy.prototype, {
+    // Public properties
+    // -----------------
+
+    // Required
+    match:      null,
+    replace:    null,
+    search:     null,
+
+    // Optional
+    cache:      false,
+    context:    function () { return true; },
+    index:      2,
+    template:   function (obj) { return obj; },
+    idProperty: null
+  });
+
+  $.fn.textcomplete.Strategy = Strategy;
+
+}(jQuery);
+
++function ($) {
+  'use strict';
+
+  var now = Date.now || function () { return new Date().getTime(); };
+
+  // Returns a function, that, as long as it continues to be invoked, will not
+  // be triggered. The function will be called after it stops being called for
+  // `wait` msec.
+  //
+  // This utility function was originally implemented at Underscore.js.
+  var debounce = function (func, wait) {
+    var timeout, args, context, timestamp, result;
+    var later = function () {
+      var last = now() - timestamp;
+      if (last < wait) {
+        timeout = setTimeout(later, wait - last);
+      } else {
+        timeout = null;
+        result = func.apply(context, args);
+        context = args = null;
+      }
+    };
+
+    return function () {
+      context = this;
+      args = arguments;
+      timestamp = now();
+      if (!timeout) {
+        timeout = setTimeout(later, wait);
+      }
+      return result;
+    };
+  };
+
+  function Adapter () {}
+
+  $.extend(Adapter.prototype, {
+    // Public properties
+    // -----------------
+
+    id:        null, // Identity.
+    completer: null, // Completer object which creates it.
+    el:        null, // Textarea element.
+    $el:       null, // jQuery object of the textarea.
+    option:    null,
+
+    // Public methods
+    // --------------
+
+    initialize: function (element, completer, option) {
+      this.el        = element;
+      this.$el       = $(element);
+      this.id        = completer.id + this.constructor.name;
+      this.completer = completer;
+      this.option    = option;
+
+      if (this.option.debounce) {
+        this._onKeyup = debounce(this._onKeyup, this.option.debounce);
+      }
+
+      this._bindEvents();
+    },
+
+    destroy: function () {
+      this.$el.off('.' + this.id); // Remove all event handlers.
+      this.$el = this.el = this.completer = null;
+    },
+
+    // Update the element with the given value and strategy.
+    //
+    // value    - The selected object. It is one of the item of the array
+    //            which was callbacked from the search function.
+    // strategy - The Strategy associated with the selected value.
+    select: function (/* value, strategy */) {
+      throw new Error('Not implemented');
+    },
+
+    // Returns the caret's relative coordinates from body's left top corner.
+    //
+    // FIXME: Calculate the left top corner of `this.option.appendTo` element.
+    getCaretPosition: function () {
+      var position = this._getCaretRelativePosition();
+      var offset = this.$el.offset();
+      position.top += offset.top;
+      position.left += offset.left;
+      return position;
+    },
+
+    // Focus on the element.
+    focus: function () {
+      this.$el.focus();
+    },
+
+    // Private methods
+    // ---------------
+
+    _bindEvents: function () {
+      this.$el.on('keyup.' + this.id, $.proxy(this._onKeyup, this));
+    },
+
+    _onKeyup: function (e) {
+      if (this._skipSearch(e)) { return; }
+      this.completer.trigger(this.getTextFromHeadToCaret(), true);
+    },
+
+    // Suppress searching if it returns true.
+    _skipSearch: function (clickEvent) {
+      switch (clickEvent.keyCode) {
+        case 13: // ENTER
+        case 40: // DOWN
+        case 38: // UP
+          return true;
+      }
+      if (clickEvent.ctrlKey) switch (clickEvent.keyCode) {
+        case 78: // Ctrl-N
+        case 80: // Ctrl-P
+          return true;
+      }
+    }
+  });
+
+  $.fn.textcomplete.Adapter = Adapter;
+}(jQuery);
+
++function ($) {
+  'use strict';
+
+  // Textarea adapter
+  // ================
+  //
+  // Managing a textarea. It doesn't know a Dropdown.
+  function Textarea(element, completer, option) {
+    this.initialize(element, completer, option);
+  }
+
+  Textarea.DIV_PROPERTIES = {
+    left: -9999,
+    position: 'absolute',
+    top: 0,
+    whiteSpace: 'pre-wrap'
+  }
+
+  Textarea.COPY_PROPERTIES = [
+    'border-width', 'font-family', 'font-size', 'font-style', 'font-variant',
+    'font-weight', 'height', 'letter-spacing', 'word-spacing', 'line-height',
+    'text-decoration', 'text-align', 'width', 'padding-top', 'padding-right',
+    'padding-bottom', 'padding-left', 'margin-top', 'margin-right',
+    'margin-bottom', 'margin-left', 'border-style', 'box-sizing', 'tab-size'
+  ];
+
+  $.extend(Textarea.prototype, $.fn.textcomplete.Adapter.prototype, {
+    // Public methods
+    // --------------
+
+    // Update the textarea with the given value and strategy.
+    select: function (value, strategy, e) {
+      var pre = this.getTextFromHeadToCaret();
+      var post = this.el.value.substring(this.el.selectionEnd);
+      var newSubstr = strategy.replace(value, e);
+      if (typeof newSubstr !== 'undefined') {
+        if ($.isArray(newSubstr)) {
+          post = newSubstr[1] + post;
+          newSubstr = newSubstr[0];
+        }
+        pre = pre.replace(strategy.match, newSubstr);
+        this.$el.val(pre + post);
+        this.el.selectionStart = this.el.selectionEnd = pre.length;
+      }
+    },
+
+    // Private methods
+    // ---------------
+
+    // Returns the caret's relative coordinates from textarea's left top corner.
+    //
+    // Browser native API does not provide the way to know the position of
+    // caret in pixels, so that here we use a kind of hack to accomplish
+    // the aim. First of all it puts a dummy div element and completely copies
+    // the textarea's style to the element, then it inserts the text and a
+    // span element into the textarea.
+    // Consequently, the span element's position is the thing what we want.
+    _getCaretRelativePosition: function () {
+      var dummyDiv = $('<div></div>').css(this._copyCss())
+        .text(this.getTextFromHeadToCaret());
+      var span = $('<span></span>').text('.').appendTo(dummyDiv);
+      this.$el.before(dummyDiv);
+      var position = span.position();
+      position.top += span.height() - this.$el.scrollTop();
+      position.lineHeight = span.height();
+      dummyDiv.remove();
+      return position;
+    },
+
+    _copyCss: function () {
+      return $.extend({
+        // Set 'scroll' if a scrollbar is being shown; otherwise 'auto'.
+        overflow: this.el.scrollHeight > this.el.offsetHeight ? 'scroll' : 'auto'
+      }, Textarea.DIV_PROPERTIES, this._getStyles());
+    },
+
+    _getStyles: (function ($) {
+      var color = $('<div></div>').css(['color']).color;
+      if (typeof color !== 'undefined') {
+        return function () {
+          return this.$el.css(Textarea.COPY_PROPERTIES);
+        };
+      } else { // jQuery < 1.8
+        return function () {
+          var $el = this.$el;
+          var styles = {};
+          $.each(Textarea.COPY_PROPERTIES, function (i, property) {
+            styles[property] = $el.css(property);
+          });
+          return styles;
+        };
+      }
+    })($),
+
+    getTextFromHeadToCaret: function () {
+      return this.el.value.substring(0, this.el.selectionEnd);
+    }
+  });
+
+  $.fn.textcomplete.Textarea = Textarea;
+}(jQuery);
+
++function ($) {
+  'use strict';
+
+  var sentinelChar = '吶';
+
+  function IETextarea(element, completer, option) {
+    this.initialize(element, completer, option);
+    $('<span>' + sentinelChar + '</span>').css({
+      position: 'absolute',
+      top: -9999,
+      left: -9999
+    }).insertBefore(element);
+  }
+
+  $.extend(IETextarea.prototype, $.fn.textcomplete.Textarea.prototype, {
+    // Public methods
+    // --------------
+
+    select: function (value, strategy, e) {
+      var pre = this.getTextFromHeadToCaret();
+      var post = this.el.value.substring(pre.length);
+      var newSubstr = strategy.replace(value, e);
+      if (typeof newSubstr !== 'undefined') {
+        if ($.isArray(newSubstr)) {
+          post = newSubstr[1] + post;
+          newSubstr = newSubstr[0];
+        }
+        pre = pre.replace(strategy.match, newSubstr);
+        this.$el.val(pre + post);
+        this.el.focus();
+        var range = this.el.createTextRange();
+        range.collapse(true);
+        range.moveEnd('character', pre.length);
+        range.moveStart('character', pre.length);
+        range.select();
+      }
+    },
+
+    getTextFromHeadToCaret: function () {
+      this.el.focus();
+      var range = document.selection.createRange();
+      range.moveStart('character', -this.el.value.length);
+      var arr = range.text.split(sentinelChar)
+      return arr.length === 1 ? arr[0] : arr[1];
+    }
+  });
+
+  $.fn.textcomplete.IETextarea = IETextarea;
+}(jQuery);
+
+// NOTE: TextComplete plugin has contenteditable support but it does not work
+//       fine especially on old IEs.
+//       Any pull requests are REALLY welcome.
+
++function ($) {
+  'use strict';
+
+  // ContentEditable adapter
+  // =======================
+  //
+  // Adapter for contenteditable elements.
+  function ContentEditable (element, completer, option) {
+    this.initialize(element, completer, option);
+  }
+
+  $.extend(ContentEditable.prototype, $.fn.textcomplete.Adapter.prototype, {
+    // Public methods
+    // --------------
+
+    // Update the content with the given value and strategy.
+    // When an dropdown item is selected, it is executed.
+    select: function (value, strategy, e) {
+      var pre = this.getTextFromHeadToCaret();
+      var sel = window.getSelection()
+      var range = sel.getRangeAt(0);
+      var selection = range.cloneRange();
+      selection.selectNodeContents(range.startContainer);
+      var content = selection.toString();
+      var post = content.substring(range.startOffset);
+      var newSubstr = strategy.replace(value, e);
+      if (typeof newSubstr !== 'undefined') {
+        if ($.isArray(newSubstr)) {
+          post = newSubstr[1] + post;
+          newSubstr = newSubstr[0];
+        }
+        pre = pre.replace(strategy.match, newSubstr);
+        range.selectNodeContents(range.startContainer);
+        range.deleteContents();
+        var node = document.createTextNode(pre + post);
+        range.insertNode(node);
+        range.setStart(node, pre.length);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    },
+
+    // Private methods
+    // ---------------
+
+    // Returns the caret's relative position from the contenteditable's
+    // left top corner.
+    //
+    // Examples
+    //
+    //   this._getCaretRelativePosition()
+    //   //=> { top: 18, left: 200, lineHeight: 16 }
+    //
+    // Dropdown's position will be decided using the result.
+    _getCaretRelativePosition: function () {
+      var range = window.getSelection().getRangeAt(0).cloneRange();
+      var node = document.createElement('span');
+      range.insertNode(node);
+      range.selectNodeContents(node);
+      range.deleteContents();
+      var $node = $(node);
+      var position = $node.offset();
+      position.left -= this.$el.offset().left;
+      position.top += $node.height() - this.$el.offset().top;
+      position.lineHeight = $node.height();
+      $node.remove();
+      return position;
+    },
+
+    // Returns the string between the first character and the caret.
+    // Completer will be triggered with the result for start autocompleting.
+    //
+    // Example
+    //
+    //   // Suppose the html is '<b>hello</b> wor|ld' and | is the caret.
+    //   this.getTextFromHeadToCaret()
+    //   // => ' wor'  // not '<b>hello</b> wor'
+    getTextFromHeadToCaret: function () {
+      var range = window.getSelection().getRangeAt(0);
+      var selection = range.cloneRange();
+      selection.selectNodeContents(range.startContainer);
+      return selection.toString().substring(0, range.startOffset);
+    }
+  });
+
+  $.fn.textcomplete.ContentEditable = ContentEditable;
+}(jQuery);
+
+return jQuery;
+}));
+
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(["jquery"], function ($) {
+      return (root.returnExportsGlobal = factory($));
+    });
+  } else if (typeof exports === 'object') {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like enviroments that support module.exports,
+    // like Node.
+    module.exports = factory(require("jquery"));
+  } else {
+    factory(jQuery);
+  }
+}(this, function ($) {
+
+/*
+  Implement Github like autocomplete mentions
+  http://ichord.github.com/At.js
+
+  Copyright (c) 2013 chord.luo@gmail.com
+  Licensed under the MIT license.
+*/
+
+/*
+本插件操作 textarea 或者 input 内的插入符
+只实现了获得插入符在文本框中的位置，我设置
+插入符的位置.
+*/
+
+"use strict";
+var EditableCaret, InputCaret, Mirror, Utils, discoveryIframeOf, methods, oDocument, oFrame, oWindow, pluginName, setContextBy;
+
+pluginName = 'caret';
+
+EditableCaret = (function() {
+  function EditableCaret($inputor) {
+    this.$inputor = $inputor;
+    this.domInputor = this.$inputor[0];
+  }
+
+  EditableCaret.prototype.setPos = function(pos) {
+    return this.domInputor;
+  };
+
+  EditableCaret.prototype.getIEPosition = function() {
+    return this.getPosition();
+  };
+
+  EditableCaret.prototype.getPosition = function() {
+    var inputor_offset, offset;
+    offset = this.getOffset();
+    inputor_offset = this.$inputor.offset();
+    offset.left -= inputor_offset.left;
+    offset.top -= inputor_offset.top;
+    return offset;
+  };
+
+  EditableCaret.prototype.getOldIEPos = function() {
+    var preCaretTextRange, textRange;
+    textRange = oDocument.selection.createRange();
+    preCaretTextRange = oDocument.body.createTextRange();
+    preCaretTextRange.moveToElementText(this.domInputor);
+    preCaretTextRange.setEndPoint("EndToEnd", textRange);
+    return preCaretTextRange.text.length;
+  };
+
+  EditableCaret.prototype.getPos = function() {
+    var clonedRange, pos, range;
+    if (range = this.range()) {
+      clonedRange = range.cloneRange();
+      clonedRange.selectNodeContents(this.domInputor);
+      clonedRange.setEnd(range.endContainer, range.endOffset);
+      pos = clonedRange.toString().length;
+      clonedRange.detach();
+      return pos;
+    } else if (oDocument.selection) {
+      return this.getOldIEPos();
+    }
+  };
+
+  EditableCaret.prototype.getOldIEOffset = function() {
+    var range, rect;
+    range = oDocument.selection.createRange().duplicate();
+    range.moveStart("character", -1);
+    rect = range.getBoundingClientRect();
+    return {
+      height: rect.bottom - rect.top,
+      left: rect.left,
+      top: rect.top
+    };
+  };
+
+  EditableCaret.prototype.getOffset = function(pos) {
+    var clonedRange, offset, range, rect, shadowCaret;
+    if (oWindow.getSelection && (range = this.range())) {
+      if (range.endOffset - 1 > 0 && range.endContainer === !this.domInputor) {
+        clonedRange = range.cloneRange();
+        clonedRange.setStart(range.endContainer, range.endOffset - 1);
+        clonedRange.setEnd(range.endContainer, range.endOffset);
+        rect = clonedRange.getBoundingClientRect();
+        offset = {
+          height: rect.height,
+          left: rect.left + rect.width,
+          top: rect.top
+        };
+        clonedRange.detach();
+      }
+      if (!offset || (offset != null ? offset.height : void 0) === 0) {
+        clonedRange = range.cloneRange();
+        shadowCaret = $(oDocument.createTextNode("|"));
+        clonedRange.insertNode(shadowCaret[0]);
+        clonedRange.selectNode(shadowCaret[0]);
+        rect = clonedRange.getBoundingClientRect();
+        offset = {
+          height: rect.height,
+          left: rect.left,
+          top: rect.top
+        };
+        shadowCaret.remove();
+        clonedRange.detach();
+      }
+    } else if (oDocument.selection) {
+      offset = this.getOldIEOffset();
+    }
+    if (offset) {
+      offset.top += $(oWindow).scrollTop();
+      offset.left += $(oWindow).scrollLeft();
+    }
+    return offset;
+  };
+
+  EditableCaret.prototype.range = function() {
+    var sel;
+    if (!oWindow.getSelection) {
+      return;
+    }
+    sel = oWindow.getSelection();
+    if (sel.rangeCount > 0) {
+      return sel.getRangeAt(0);
+    } else {
+      return null;
+    }
+  };
+
+  return EditableCaret;
+
+})();
+
+InputCaret = (function() {
+  function InputCaret($inputor) {
+    this.$inputor = $inputor;
+    this.domInputor = this.$inputor[0];
+  }
+
+  InputCaret.prototype.getIEPos = function() {
+    var endRange, inputor, len, normalizedValue, pos, range, textInputRange;
+    inputor = this.domInputor;
+    range = oDocument.selection.createRange();
+    pos = 0;
+    if (range && range.parentElement() === inputor) {
+      normalizedValue = inputor.value.replace(/\r\n/g, "\n");
+      len = normalizedValue.length;
+      textInputRange = inputor.createTextRange();
+      textInputRange.moveToBookmark(range.getBookmark());
+      endRange = inputor.createTextRange();
+      endRange.collapse(false);
+      if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
+        pos = len;
+      } else {
+        pos = -textInputRange.moveStart("character", -len);
+      }
+    }
+    return pos;
+  };
+
+  InputCaret.prototype.getPos = function() {
+    if (oDocument.selection) {
+      return this.getIEPos();
+    } else {
+      return this.domInputor.selectionStart;
+    }
+  };
+
+  InputCaret.prototype.setPos = function(pos) {
+    var inputor, range;
+    inputor = this.domInputor;
+    if (oDocument.selection) {
+      range = inputor.createTextRange();
+      range.move("character", pos);
+      range.select();
+    } else if (inputor.setSelectionRange) {
+      inputor.setSelectionRange(pos, pos);
+    }
+    return inputor;
+  };
+
+  InputCaret.prototype.getIEOffset = function(pos) {
+    var h, textRange, x, y;
+    textRange = this.domInputor.createTextRange();
+    pos || (pos = this.getPos());
+    textRange.move('character', pos);
+    x = textRange.boundingLeft;
+    y = textRange.boundingTop;
+    h = textRange.boundingHeight;
+    return {
+      left: x,
+      top: y,
+      height: h
+    };
+  };
+
+  InputCaret.prototype.getOffset = function(pos) {
+    var $inputor, offset, position;
+    $inputor = this.$inputor;
+    if (oDocument.selection) {
+      offset = this.getIEOffset(pos);
+      offset.top += $(oWindow).scrollTop() + $inputor.scrollTop();
+      offset.left += $(oWindow).scrollLeft() + $inputor.scrollLeft();
+      return offset;
+    } else {
+      offset = $inputor.offset();
+      position = this.getPosition(pos);
+      return offset = {
+        left: offset.left + position.left - $inputor.scrollLeft(),
+        top: offset.top + position.top - $inputor.scrollTop(),
+        height: position.height
+      };
+    }
+  };
+
+  InputCaret.prototype.getPosition = function(pos) {
+    var $inputor, at_rect, end_range, format, html, mirror, start_range;
+    $inputor = this.$inputor;
+    format = function(value) {
+      value = value.replace(/<|>|`|"|&/g, '?').replace(/\r\n|\r|\n/g, "<br/>");
+      if (/firefox/i.test(navigator.userAgent)) {
+        value = value.replace(/\s/g, '&nbsp;');
+      }
+      return value;
+    };
+    if (pos === void 0) {
+      pos = this.getPos();
+    }
+    start_range = $inputor.val().slice(0, pos);
+    end_range = $inputor.val().slice(pos);
+    html = "<span style='position: relative; display: inline;'>" + format(start_range) + "</span>";
+    html += "<span id='caret' style='position: relative; display: inline;'>|</span>";
+    html += "<span style='position: relative; display: inline;'>" + format(end_range) + "</span>";
+    mirror = new Mirror($inputor);
+    return at_rect = mirror.create(html).rect();
+  };
+
+  InputCaret.prototype.getIEPosition = function(pos) {
+    var h, inputorOffset, offset, x, y;
+    offset = this.getIEOffset(pos);
+    inputorOffset = this.$inputor.offset();
+    x = offset.left - inputorOffset.left;
+    y = offset.top - inputorOffset.top;
+    h = offset.height;
+    return {
+      left: x,
+      top: y,
+      height: h
+    };
+  };
+
+  return InputCaret;
+
+})();
+
+Mirror = (function() {
+  Mirror.prototype.css_attr = ["borderBottomWidth", "borderLeftWidth", "borderRightWidth", "borderTopStyle", "borderRightStyle", "borderBottomStyle", "borderLeftStyle", "borderTopWidth", "boxSizing", "fontFamily", "fontSize", "fontWeight", "height", "letterSpacing", "lineHeight", "marginBottom", "marginLeft", "marginRight", "marginTop", "outlineWidth", "overflow", "overflowX", "overflowY", "paddingBottom", "paddingLeft", "paddingRight", "paddingTop", "textAlign", "textOverflow", "textTransform", "whiteSpace", "wordBreak", "wordWrap"];
+
+  function Mirror($inputor) {
+    this.$inputor = $inputor;
+  }
+
+  Mirror.prototype.mirrorCss = function() {
+    var css,
+      _this = this;
+    css = {
+      position: 'absolute',
+      left: -9999,
+      top: 0,
+      zIndex: -20000
+    };
+    if (this.$inputor.prop('tagName') === 'TEXTAREA') {
+      this.css_attr.push('width');
+    }
+    $.each(this.css_attr, function(i, p) {
+      return css[p] = _this.$inputor.css(p);
+    });
+    return css;
+  };
+
+  Mirror.prototype.create = function(html) {
+    this.$mirror = $('<div></div>');
+    this.$mirror.css(this.mirrorCss());
+    this.$mirror.html(html);
+    this.$inputor.after(this.$mirror);
+    return this;
+  };
+
+  Mirror.prototype.rect = function() {
+    var $flag, pos, rect;
+    $flag = this.$mirror.find("#caret");
+    pos = $flag.position();
+    rect = {
+      left: pos.left,
+      top: pos.top,
+      height: $flag.height()
+    };
+    this.$mirror.remove();
+    return rect;
+  };
+
+  return Mirror;
+
+})();
+
+Utils = {
+  contentEditable: function($inputor) {
+    return !!($inputor[0].contentEditable && $inputor[0].contentEditable === 'true');
+  }
+};
+
+methods = {
+  pos: function(pos) {
+    if (pos || pos === 0) {
+      return this.setPos(pos);
+    } else {
+      return this.getPos();
+    }
+  },
+  position: function(pos) {
+    if (oDocument.selection) {
+      return this.getIEPosition(pos);
+    } else {
+      return this.getPosition(pos);
+    }
+  },
+  offset: function(pos) {
+    var offset;
+    offset = this.getOffset(pos);
+    return offset;
+  }
+};
+
+oDocument = null;
+
+oWindow = null;
+
+oFrame = null;
+
+setContextBy = function(settings) {
+  var iframe;
+  if (iframe = settings != null ? settings.iframe : void 0) {
+    oFrame = iframe;
+    oWindow = iframe.contentWindow;
+    return oDocument = iframe.contentDocument || oWindow.document;
+  } else {
+    oFrame = void 0;
+    oWindow = window;
+    return oDocument = document;
+  }
+};
+
+discoveryIframeOf = function($dom) {
+  var error;
+  oDocument = $dom[0].ownerDocument;
+  oWindow = oDocument.defaultView || oDocument.parentWindow;
+  try {
+    return oFrame = oWindow.frameElement;
+  } catch (_error) {
+    error = _error;
+  }
+};
+
+$.fn.caret = function(method, value, settings) {
+  var caret;
+  if (methods[method]) {
+    if ($.isPlainObject(value)) {
+      setContextBy(value);
+      value = void 0;
+    } else {
+      setContextBy(settings);
+    }
+    caret = Utils.contentEditable(this) ? new EditableCaret(this) : new InputCaret(this);
+    return methods[method].apply(caret, [value]);
+  } else {
+    return $.error("Method " + method + " does not exist on jQuery.caret");
+  }
+};
+
+$.fn.caret.EditableCaret = EditableCaret;
+
+$.fn.caret.InputCaret = InputCaret;
+
+$.fn.caret.Utils = Utils;
+
+$.fn.caret.apis = methods;
+
+
+}));
+
+/*! jquery.atwho - v1.3.2 %>
+* Copyright (c) 2015 chord.luo <chord.luo@gmail.com>;
+* homepage: http://ichord.github.com/At.js
+* Licensed MIT
+*/
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module unless amdModuleId is set
+    define(["jquery"], function (a0) {
+      return (factory(a0));
+    });
+  } else if (typeof exports === 'object') {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like environments that support module.exports,
+    // like Node.
+    module.exports = factory(require("jquery"));
+  } else {
+    factory(jQuery);
+  }
+}(this, function (jquery) {
+
+var $, Api, App, Controller, DEFAULT_CALLBACKS, EditableController, KEY_CODE, Model, TextareaController, View,
+  slice = [].slice,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
+
+$ = jquery;
+
+App = (function() {
+  function App(inputor) {
+    this.currentFlag = null;
+    this.controllers = {};
+    this.aliasMaps = {};
+    this.$inputor = $(inputor);
+    this.setupRootElement();
+    this.listen();
+  }
+
+  App.prototype.createContainer = function(doc) {
+    var ref;
+    if ((ref = this.$el) != null) {
+      ref.remove();
+    }
+    return $(doc.body).append(this.$el = $("<div class='atwho-container'></div>"));
+  };
+
+  App.prototype.setupRootElement = function(iframe, asRoot) {
+    var error;
+    if (asRoot == null) {
+      asRoot = false;
+    }
+    if (iframe) {
+      this.window = iframe.contentWindow;
+      this.document = iframe.contentDocument || this.window.document;
+      this.iframe = iframe;
+    } else {
+      this.document = this.$inputor[0].ownerDocument;
+      this.window = this.document.defaultView || this.document.parentWindow;
+      try {
+        this.iframe = this.window.frameElement;
+      } catch (_error) {
+        error = _error;
+        this.iframe = null;
+        if ($.fn.atwho.debug) {
+          throw new Error("iframe auto-discovery is failed.\nPlease use `setIframe` to set the target iframe manually.\n" + error);
+        }
+      }
+    }
+    return this.createContainer((this.iframeAsRoot = asRoot) ? this.document : document);
+  };
+
+  App.prototype.controller = function(at) {
+    var c, current, currentFlag, ref;
+    if (this.aliasMaps[at]) {
+      current = this.controllers[this.aliasMaps[at]];
+    } else {
+      ref = this.controllers;
+      for (currentFlag in ref) {
+        c = ref[currentFlag];
+        if (currentFlag === at) {
+          current = c;
+          break;
+        }
+      }
+    }
+    if (current) {
+      return current;
+    } else {
+      return this.controllers[this.currentFlag];
+    }
+  };
+
+  App.prototype.setContextFor = function(at) {
+    this.currentFlag = at;
+    return this;
+  };
+
+  App.prototype.reg = function(flag, setting) {
+    var base, controller;
+    controller = (base = this.controllers)[flag] || (base[flag] = this.$inputor.is('[contentEditable]') ? new EditableController(this, flag) : new TextareaController(this, flag));
+    if (setting.alias) {
+      this.aliasMaps[setting.alias] = flag;
+    }
+    controller.init(setting);
+    return this;
+  };
+
+  App.prototype.listen = function() {
+    return this.$inputor.on('compositionstart', (function(_this) {
+      return function(e) {
+        var ref;
+        if ((ref = _this.controller()) != null) {
+          ref.view.hide();
+        }
+        return _this.isComposing = true;
+      };
+    })(this)).on('compositionend', (function(_this) {
+      return function(e) {
+        return _this.isComposing = false;
+      };
+    })(this)).on('keyup.atwhoInner', (function(_this) {
+      return function(e) {
+        return _this.onKeyup(e);
+      };
+    })(this)).on('keydown.atwhoInner', (function(_this) {
+      return function(e) {
+        return _this.onKeydown(e);
+      };
+    })(this)).on('blur.atwhoInner', (function(_this) {
+      return function(e) {
+        var c;
+        if (c = _this.controller()) {
+          c.expectedQueryCBId = null;
+          return c.view.hide(e, c.getOpt("displayTimeout"));
+        }
+      };
+    })(this)).on('click.atwhoInner', (function(_this) {
+      return function(e) {
+        return _this.dispatch(e);
+      };
+    })(this)).on('scroll.atwhoInner', (function(_this) {
+      return function() {
+        var lastScrollTop;
+        lastScrollTop = _this.$inputor.scrollTop();
+        return function(e) {
+          var currentScrollTop, ref;
+          currentScrollTop = e.target.scrollTop;
+          if (lastScrollTop !== currentScrollTop) {
+            if ((ref = _this.controller()) != null) {
+              ref.view.hide(e);
+            }
+          }
+          lastScrollTop = currentScrollTop;
+          return true;
+        };
+      };
+    })(this)());
+  };
+
+  App.prototype.shutdown = function() {
+    var _, c, ref;
+    ref = this.controllers;
+    for (_ in ref) {
+      c = ref[_];
+      c.destroy();
+      delete this.controllers[_];
+    }
+    this.$inputor.off('.atwhoInner');
+    return this.$el.remove();
+  };
+
+  App.prototype.dispatch = function(e) {
+    var _, c, ref, results;
+    ref = this.controllers;
+    results = [];
+    for (_ in ref) {
+      c = ref[_];
+      results.push(c.lookUp(e));
+    }
+    return results;
+  };
+
+  App.prototype.onKeyup = function(e) {
+    var ref;
+    switch (e.keyCode) {
+      case KEY_CODE.ESC:
+        e.preventDefault();
+        if ((ref = this.controller()) != null) {
+          ref.view.hide();
+        }
+        break;
+      case KEY_CODE.DOWN:
+      case KEY_CODE.UP:
+      case KEY_CODE.CTRL:
+        $.noop();
+        break;
+      case KEY_CODE.P:
+      case KEY_CODE.N:
+        if (!e.ctrlKey) {
+          this.dispatch(e);
+        }
+        break;
+      default:
+        this.dispatch(e);
+    }
+  };
+
+  App.prototype.onKeydown = function(e) {
+    var ref, view;
+    view = (ref = this.controller()) != null ? ref.view : void 0;
+    if (!(view && view.visible())) {
+      return;
+    }
+    switch (e.keyCode) {
+      case KEY_CODE.ESC:
+        e.preventDefault();
+        view.hide(e);
+        break;
+      case KEY_CODE.UP:
+        e.preventDefault();
+        view.prev();
+        break;
+      case KEY_CODE.DOWN:
+        e.preventDefault();
+        view.next();
+        break;
+      case KEY_CODE.P:
+        if (!e.ctrlKey) {
+          return;
+        }
+        e.preventDefault();
+        view.prev();
+        break;
+      case KEY_CODE.N:
+        if (!e.ctrlKey) {
+          return;
+        }
+        e.preventDefault();
+        view.next();
+        break;
+      case KEY_CODE.TAB:
+      case KEY_CODE.ENTER:
+      case KEY_CODE.SPACE:
+        if (!view.visible()) {
+          return;
+        }
+        if (!this.controller().getOpt('spaceSelectsMatch') && e.keyCode === KEY_CODE.SPACE) {
+          return;
+        }
+        if (!this.controller().getOpt('tabSelectsMatch') && e.keyCode === KEY_CODE.TAB) {
+          return;
+        }
+        if (view.highlighted()) {
+          e.preventDefault();
+          view.choose(e);
+        } else {
+          view.hide(e);
+        }
+        break;
+      default:
+        $.noop();
+    }
+  };
+
+  return App;
+
+})();
+
+Controller = (function() {
+  Controller.prototype.uid = function() {
+    return (Math.random().toString(16) + "000000000").substr(2, 8) + (new Date().getTime());
+  };
+
+  function Controller(app1, at1) {
+    this.app = app1;
+    this.at = at1;
+    this.$inputor = this.app.$inputor;
+    this.id = this.$inputor[0].id || this.uid();
+    this.expectedQueryCBId = null;
+    this.setting = null;
+    this.query = null;
+    this.pos = 0;
+    this.range = null;
+    if ((this.$el = $("#atwho-ground-" + this.id, this.app.$el)).length === 0) {
+      this.app.$el.append(this.$el = $("<div id='atwho-ground-" + this.id + "'></div>"));
+    }
+    this.model = new Model(this);
+    this.view = new View(this);
+  }
+
+  Controller.prototype.init = function(setting) {
+    this.setting = $.extend({}, this.setting || $.fn.atwho["default"], setting);
+    this.view.init();
+    return this.model.reload(this.setting.data);
+  };
+
+  Controller.prototype.destroy = function() {
+    this.trigger('beforeDestroy');
+    this.model.destroy();
+    this.view.destroy();
+    return this.$el.remove();
+  };
+
+  Controller.prototype.callDefault = function() {
+    var args, error, funcName;
+    funcName = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+    try {
+      return DEFAULT_CALLBACKS[funcName].apply(this, args);
+    } catch (_error) {
+      error = _error;
+      return $.error(error + " Or maybe At.js doesn't have function " + funcName);
+    }
+  };
+
+  Controller.prototype.trigger = function(name, data) {
+    var alias, eventName;
+    if (data == null) {
+      data = [];
+    }
+    data.push(this);
+    alias = this.getOpt('alias');
+    eventName = alias ? name + "-" + alias + ".atwho" : name + ".atwho";
+    return this.$inputor.trigger(eventName, data);
+  };
+
+  Controller.prototype.callbacks = function(funcName) {
+    return this.getOpt("callbacks")[funcName] || DEFAULT_CALLBACKS[funcName];
+  };
+
+  Controller.prototype.getOpt = function(at, default_value) {
+    var e;
+    try {
+      return this.setting[at];
+    } catch (_error) {
+      e = _error;
+      return null;
+    }
+  };
+
+  Controller.prototype.insertContentFor = function($li) {
+    var data, tpl;
+    tpl = this.getOpt('insertTpl');
+    data = $.extend({}, $li.data('item-data'), {
+      'atwho-at': this.at
+    });
+    return this.callbacks("tplEval").call(this, tpl, data, "onInsert");
+  };
+
+  Controller.prototype.renderView = function(data) {
+    var searchKey;
+    searchKey = this.getOpt("searchKey");
+    data = this.callbacks("sorter").call(this, this.query.text, data.slice(0, 1001), searchKey);
+    return this.view.render(data.slice(0, this.getOpt('limit')));
+  };
+
+  Controller.arrayToDefaultHash = function(data) {
+    var i, item, len, results;
+    if (!$.isArray(data)) {
+      return data;
+    }
+    results = [];
+    for (i = 0, len = data.length; i < len; i++) {
+      item = data[i];
+      if ($.isPlainObject(item)) {
+        results.push(item);
+      } else {
+        results.push({
+          name: item
+        });
+      }
+    }
+    return results;
+  };
+
+  Controller.prototype.lookUp = function(e) {
+    var query, wait;
+    query = this.catchQuery(e);
+    if (!query) {
+      this.expectedQueryCBId = null;
+      return query;
+    }
+    this.app.setContextFor(this.at);
+    if (wait = this.getOpt('delay')) {
+      this._delayLookUp(query, wait);
+    } else {
+      this._lookUp(query);
+    }
+    return query;
+  };
+
+  Controller.prototype._delayLookUp = function(query, wait) {
+    var now, remaining;
+    now = Date.now ? Date.now() : new Date().getTime();
+    this.previousCallTime || (this.previousCallTime = now);
+    remaining = wait - (now - this.previousCallTime);
+    if ((0 < remaining && remaining < wait)) {
+      this.previousCallTime = now;
+      this._stopDelayedCall();
+      return this.delayedCallTimeout = setTimeout((function(_this) {
+        return function() {
+          _this.previousCallTime = 0;
+          _this.delayedCallTimeout = null;
+          return _this._lookUp(query);
+        };
+      })(this), wait);
+    } else {
+      this._stopDelayedCall();
+      if (this.previousCallTime !== now) {
+        this.previousCallTime = 0;
+      }
+      return this._lookUp(query);
+    }
+  };
+
+  Controller.prototype._stopDelayedCall = function() {
+    if (this.delayedCallTimeout) {
+      clearTimeout(this.delayedCallTimeout);
+      return this.delayedCallTimeout = null;
+    }
+  };
+
+  Controller.prototype._generateQueryCBId = function() {
+    return {};
+  };
+
+  Controller.prototype._lookUp = function(query) {
+    var _callback;
+    _callback = function(queryCBId, data) {
+      if (queryCBId !== this.expectedQueryCBId) {
+        return;
+      }
+      if (data && data.length > 0) {
+        return this.renderView(this.constructor.arrayToDefaultHash(data));
+      } else {
+        return this.view.hide();
+      }
+    };
+    this.expectedQueryCBId = this._generateQueryCBId();
+    return this.model.query(query.text, $.proxy(_callback, this, this.expectedQueryCBId));
+  };
+
+  return Controller;
+
+})();
+
+TextareaController = (function(superClass) {
+  extend(TextareaController, superClass);
+
+  function TextareaController() {
+    return TextareaController.__super__.constructor.apply(this, arguments);
+  }
+
+  TextareaController.prototype.catchQuery = function() {
+    var caretPos, content, end, query, start, subtext;
+    content = this.$inputor.val();
+    caretPos = this.$inputor.caret('pos', {
+      iframe: this.app.iframe
+    });
+    subtext = content.slice(0, caretPos);
+    query = this.callbacks("matcher").call(this, this.at, subtext, this.getOpt('startWithSpace'));
+    if (typeof query === "string" && query.length <= this.getOpt('maxLen', 20)) {
+      start = caretPos - query.length;
+      end = start + query.length;
+      this.pos = start;
+      query = {
+        'text': query,
+        'headPos': start,
+        'endPos': end
+      };
+      this.trigger("matched", [this.at, query.text]);
+    } else {
+      query = null;
+      this.view.hide();
+    }
+    return this.query = query;
+  };
+
+  TextareaController.prototype.rect = function() {
+    var c, iframeOffset, scaleBottom;
+    if (!(c = this.$inputor.caret('offset', this.pos - 1, {
+      iframe: this.app.iframe
+    }))) {
+      return;
+    }
+    if (this.app.iframe && !this.app.iframeAsRoot) {
+      iframeOffset = $(this.app.iframe).offset();
+      c.left += iframeOffset.left;
+      c.top += iframeOffset.top;
+    }
+    scaleBottom = this.app.document.selection ? 0 : 2;
+    return {
+      left: c.left,
+      top: c.top,
+      bottom: c.top + c.height + scaleBottom
+    };
+  };
+
+  TextareaController.prototype.insert = function(content, $li) {
+    var $inputor, source, startStr, suffix, text;
+    $inputor = this.$inputor;
+    source = $inputor.val();
+    startStr = source.slice(0, Math.max(this.query.headPos - this.at.length, 0));
+    suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || " ";
+    content += suffix;
+    text = "" + startStr + content + (source.slice(this.query['endPos'] || 0));
+    $inputor.val(text);
+    $inputor.caret('pos', startStr.length + content.length, {
+      iframe: this.app.iframe
+    });
+    if (!$inputor.is(':focus')) {
+      $inputor.focus();
+    }
+    return $inputor.change();
+  };
+
+  return TextareaController;
+
+})(Controller);
+
+EditableController = (function(superClass) {
+  extend(EditableController, superClass);
+
+  function EditableController() {
+    return EditableController.__super__.constructor.apply(this, arguments);
+  }
+
+  EditableController.prototype._getRange = function() {
+    var sel;
+    sel = this.app.window.getSelection();
+    if (sel.rangeCount > 0) {
+      return sel.getRangeAt(0);
+    }
+  };
+
+  EditableController.prototype._setRange = function(position, node, range) {
+    if (range == null) {
+      range = this._getRange();
+    }
+    if (!range) {
+      return;
+    }
+    node = $(node)[0];
+    if (position === 'after') {
+      range.setEndAfter(node);
+      range.setStartAfter(node);
+    } else {
+      range.setEndBefore(node);
+      range.setStartBefore(node);
+    }
+    range.collapse(false);
+    return this._clearRange(range);
+  };
+
+  EditableController.prototype._clearRange = function(range) {
+    var sel;
+    if (range == null) {
+      range = this._getRange();
+    }
+    sel = this.app.window.getSelection();
+    if (this.ctrl_a_pressed == null) {
+      sel.removeAllRanges();
+      return sel.addRange(range);
+    }
+  };
+
+  EditableController.prototype._movingEvent = function(e) {
+    var ref;
+    return e.type === 'click' || ((ref = e.which) === KEY_CODE.RIGHT || ref === KEY_CODE.LEFT || ref === KEY_CODE.UP || ref === KEY_CODE.DOWN);
+  };
+
+  EditableController.prototype._unwrap = function(node) {
+    var next;
+    node = $(node).unwrap().get(0);
+    if ((next = node.nextSibling) && next.nodeValue) {
+      node.nodeValue += next.nodeValue;
+      $(next).remove();
+    }
+    return node;
+  };
+
+  EditableController.prototype.catchQuery = function(e) {
+    var $inserted, $query, _range, index, inserted, lastNode, matched, offset, query, range;
+    if (this.app.isComposing) {
+      return;
+    }
+    if (!(range = this._getRange())) {
+      return;
+    }
+    if (e.which === KEY_CODE.CTRL) {
+      this.ctrl_pressed = true;
+    } else if (e.which === KEY_CODE.A) {
+      if (this.ctrl_pressed == null) {
+        this.ctrl_a_pressed = true;
+      }
+    } else {
+      delete this.ctrl_a_pressed;
+      delete this.ctrl_pressed;
+    }
+    if (e.which === KEY_CODE.ENTER) {
+      ($query = $(range.startContainer).closest('.atwho-query')).contents().unwrap();
+      if ($query.is(':empty')) {
+        $query.remove();
+      }
+      ($query = $(".atwho-query", this.app.document)).text($query.text()).contents().last().unwrap();
+      this._clearRange();
+      return;
+    }
+    if (/firefox/i.test(navigator.userAgent)) {
+      if ($(range.startContainer).is(this.$inputor)) {
+        this._clearRange();
+        return;
+      }
+      if (e.which === KEY_CODE.BACKSPACE && range.startContainer.nodeType === document.ELEMENT_NODE && (offset = range.startOffset - 1) >= 0) {
+        _range = range.cloneRange();
+        _range.setStart(range.startContainer, offset);
+        if ($(_range.cloneContents()).contents().last().is('.atwho-inserted')) {
+          inserted = $(range.startContainer).contents().get(offset);
+          this._setRange('after', $(inserted).contents().last());
+        }
+      } else if (e.which === KEY_CODE.LEFT && range.startContainer.nodeType === document.TEXT_NODE) {
+        $inserted = $(range.startContainer.previousSibling);
+        if ($inserted.is('.atwho-inserted') && range.startOffset === 0) {
+          this._setRange('after', $inserted.contents().last());
+        }
+      }
+    }
+    $(range.startContainer).closest('.atwho-inserted').addClass('atwho-query').siblings().removeClass('atwho-query');
+    if (($query = $(".atwho-query", this.app.document)).length > 0 && $query.is(':empty') && $query.text().length === 0) {
+      $query.remove();
+    }
+    if (!this._movingEvent(e)) {
+      $query.removeClass('atwho-inserted');
+    }
+    _range = range.cloneRange();
+    _range.setStart(range.startContainer, 0);
+    matched = this.callbacks("matcher").call(this, this.at, _range.toString(), this.getOpt('startWithSpace'));
+    if ($query.length === 0 && typeof matched === 'string' && (index = range.startOffset - this.at.length - matched.length) >= 0) {
+      range.setStart(range.startContainer, index);
+      $query = $('<span/>', this.app.document).attr(this.getOpt("editableAtwhoQueryAttrs")).addClass('atwho-query');
+      range.surroundContents($query.get(0));
+      lastNode = $query.contents().last().get(0);
+      if (/firefox/i.test(navigator.userAgent)) {
+        range.setStart(lastNode, lastNode.length);
+        range.setEnd(lastNode, lastNode.length);
+        this._clearRange(range);
+      } else {
+        this._setRange('after', lastNode, range);
+      }
+    }
+    if (typeof matched === 'string' && matched.length <= this.getOpt('maxLen', 20)) {
+      query = {
+        text: matched,
+        el: $query
+      };
+      this.trigger("matched", [this.at, query.text]);
+      return this.query = query;
+    } else {
+      this.view.hide();
+      this.query = {
+        el: $query
+      };
+      if ($query.text().indexOf(this.at) >= 0) {
+        if (this._movingEvent(e) && $query.hasClass('atwho-inserted')) {
+          $query.removeClass('atwho-query');
+        } else if (false !== this.callbacks('afterMatchFailed').call(this, this.at, $query)) {
+          this._setRange("after", this._unwrap($query.text($query.text()).contents().first()));
+        }
+      }
+      return null;
+    }
+  };
+
+  EditableController.prototype.rect = function() {
+    var $iframe, iframeOffset, rect;
+    rect = this.query.el.offset();
+    if (this.app.iframe && !this.app.iframeAsRoot) {
+      iframeOffset = ($iframe = $(this.app.iframe)).offset();
+      rect.left += iframeOffset.left - this.$inputor.scrollLeft();
+      rect.top += iframeOffset.top - this.$inputor.scrollTop();
+    }
+    rect.bottom = rect.top + this.query.el.height();
+    return rect;
+  };
+
+  EditableController.prototype.insert = function(content, $li) {
+    var range, suffix, suffixNode;
+    suffix = (suffix = this.getOpt('suffix')) === "" ? suffix : suffix || "\u00A0";
+    this.query.el.removeClass('atwho-query').addClass('atwho-inserted').html(content);
+    if (range = this._getRange()) {
+      range.setEndAfter(this.query.el[0]);
+      range.collapse(false);
+      range.insertNode(suffixNode = this.app.document.createTextNode(suffix));
+      this._setRange('after', suffixNode, range);
+    }
+    if (!this.$inputor.is(':focus')) {
+      this.$inputor.focus();
+    }
+    return this.$inputor.change();
+  };
+
+  return EditableController;
+
+})(Controller);
+
+Model = (function() {
+  function Model(context) {
+    this.context = context;
+    this.at = this.context.at;
+    this.storage = this.context.$inputor;
+  }
+
+  Model.prototype.destroy = function() {
+    return this.storage.data(this.at, null);
+  };
+
+  Model.prototype.saved = function() {
+    return this.fetch() > 0;
+  };
+
+  Model.prototype.query = function(query, callback) {
+    var _remoteFilter, data, searchKey;
+    data = this.fetch();
+    searchKey = this.context.getOpt("searchKey");
+    data = this.context.callbacks('filter').call(this.context, query, data, searchKey) || [];
+    _remoteFilter = this.context.callbacks('remoteFilter');
+    if (data.length > 0 || (!_remoteFilter && data.length === 0)) {
+      return callback(data);
+    } else {
+      return _remoteFilter.call(this.context, query, callback);
+    }
+  };
+
+  Model.prototype.fetch = function() {
+    return this.storage.data(this.at) || [];
+  };
+
+  Model.prototype.save = function(data) {
+    return this.storage.data(this.at, this.context.callbacks("beforeSave").call(this.context, data || []));
+  };
+
+  Model.prototype.load = function(data) {
+    if (!(this.saved() || !data)) {
+      return this._load(data);
+    }
+  };
+
+  Model.prototype.reload = function(data) {
+    return this._load(data);
+  };
+
+  Model.prototype._load = function(data) {
+    if (typeof data === "string") {
+      return $.ajax(data, {
+        dataType: "json"
+      }).done((function(_this) {
+        return function(data) {
+          return _this.save(data);
+        };
+      })(this));
+    } else {
+      return this.save(data);
+    }
+  };
+
+  return Model;
+
+})();
+
+View = (function() {
+  function View(context) {
+    this.context = context;
+    this.$el = $("<div class='atwho-view'><ul class='atwho-view-ul'></ul></div>");
+    this.timeoutID = null;
+    this.context.$el.append(this.$el);
+    this.bindEvent();
+  }
+
+  View.prototype.init = function() {
+    var id;
+    id = this.context.getOpt("alias") || this.context.at.charCodeAt(0);
+    return this.$el.attr({
+      'id': "at-view-" + id
+    });
+  };
+
+  View.prototype.destroy = function() {
+    return this.$el.remove();
+  };
+
+  View.prototype.bindEvent = function() {
+    var $menu;
+    $menu = this.$el.find('ul');
+    return $menu.on('mouseenter.atwho-view', 'li', function(e) {
+      $menu.find('.cur').removeClass('cur');
+      return $(e.currentTarget).addClass('cur');
+    }).on('click.atwho-view', 'li', (function(_this) {
+      return function(e) {
+        $menu.find('.cur').removeClass('cur');
+        $(e.currentTarget).addClass('cur');
+        _this.choose(e);
+        return e.preventDefault();
+      };
+    })(this));
+  };
+
+  View.prototype.visible = function() {
+    return this.$el.is(":visible");
+  };
+
+  View.prototype.highlighted = function() {
+    return this.$el.find(".cur").length > 0;
+  };
+
+  View.prototype.choose = function(e) {
+    var $li, content;
+    if (($li = this.$el.find(".cur")).length) {
+      content = this.context.insertContentFor($li);
+      this.context.insert(this.context.callbacks("beforeInsert").call(this.context, content, $li), $li);
+      this.context.trigger("inserted", [$li, e]);
+      this.hide(e);
+    }
+    if (this.context.getOpt("hideWithoutSuffix")) {
+      return this.stopShowing = true;
+    }
+  };
+
+  View.prototype.reposition = function(rect) {
+    var _window, offset, overflowOffset, ref;
+    _window = this.context.app.iframeAsRoot ? this.context.app.window : window;
+    if (rect.bottom + this.$el.height() - $(_window).scrollTop() > $(_window).height()) {
+      rect.bottom = rect.top - this.$el.height();
+    }
+    if (rect.left > (overflowOffset = $(_window).width() - this.$el.width() - 5)) {
+      rect.left = overflowOffset;
+    }
+    offset = {
+      left: rect.left,
+      top: rect.bottom
+    };
+    if ((ref = this.context.callbacks("beforeReposition")) != null) {
+      ref.call(this.context, offset);
+    }
+    this.$el.offset(offset);
+    return this.context.trigger("reposition", [offset]);
+  };
+
+  View.prototype.next = function() {
+    var cur, next;
+    cur = this.$el.find('.cur').removeClass('cur');
+    next = cur.next();
+    if (!next.length) {
+      next = this.$el.find('li:first');
+    }
+    next.addClass('cur');
+    return this.scrollTop(Math.max(0, cur.innerHeight() * (next.index() + 2) - this.$el.height()));
+  };
+
+  View.prototype.prev = function() {
+    var cur, prev;
+    cur = this.$el.find('.cur').removeClass('cur');
+    prev = cur.prev();
+    if (!prev.length) {
+      prev = this.$el.find('li:last');
+    }
+    prev.addClass('cur');
+    return this.scrollTop(Math.max(0, cur.innerHeight() * (prev.index() + 2) - this.$el.height()));
+  };
+
+  View.prototype.scrollTop = function(scrollTop) {
+    var scrollDuration;
+    scrollDuration = this.context.getOpt('scrollDuration');
+    if (scrollDuration) {
+      return this.$el.animate({
+        scrollTop: scrollTop
+      }, scrollDuration);
+    } else {
+      return this.$el.scrollTop(scrollTop);
+    }
+  };
+
+  View.prototype.show = function() {
+    var rect;
+    if (this.stopShowing) {
+      this.stopShowing = false;
+      return;
+    }
+    if (!this.visible()) {
+      this.$el.show();
+      this.$el.scrollTop(0);
+      this.context.trigger('shown');
+    }
+    if (rect = this.context.rect()) {
+      return this.reposition(rect);
+    }
+  };
+
+  View.prototype.hide = function(e, time) {
+    var callback;
+    if (!this.visible()) {
+      return;
+    }
+    if (isNaN(time)) {
+      this.$el.hide();
+      return this.context.trigger('hidden', [e]);
+    } else {
+      callback = (function(_this) {
+        return function() {
+          return _this.hide();
+        };
+      })(this);
+      clearTimeout(this.timeoutID);
+      return this.timeoutID = setTimeout(callback, time);
+    }
+  };
+
+  View.prototype.render = function(list) {
+    var $li, $ul, i, item, len, li, tpl;
+    if (!($.isArray(list) && list.length > 0)) {
+      this.hide();
+      return;
+    }
+    this.$el.find('ul').empty();
+    $ul = this.$el.find('ul');
+    tpl = this.context.getOpt('displayTpl');
+    for (i = 0, len = list.length; i < len; i++) {
+      item = list[i];
+      item = $.extend({}, item, {
+        'atwho-at': this.context.at
+      });
+      li = this.context.callbacks("tplEval").call(this.context, tpl, item, "onDisplay");
+      $li = $(this.context.callbacks("highlighter").call(this.context, li, this.context.query.text));
+      $li.data("item-data", item);
+      $ul.append($li);
+    }
+    this.show();
+    if (this.context.getOpt('highlightFirst')) {
+      return $ul.find("li:first").addClass("cur");
+    }
+  };
+
+  return View;
+
+})();
+
+KEY_CODE = {
+  DOWN: 40,
+  UP: 38,
+  ESC: 27,
+  TAB: 9,
+  ENTER: 13,
+  CTRL: 17,
+  A: 65,
+  P: 80,
+  N: 78,
+  LEFT: 37,
+  UP: 38,
+  RIGHT: 39,
+  DOWN: 40,
+  BACKSPACE: 8,
+  SPACE: 32
+};
+
+DEFAULT_CALLBACKS = {
+  beforeSave: function(data) {
+    return Controller.arrayToDefaultHash(data);
+  },
+  matcher: function(flag, subtext, should_startWithSpace, acceptSpaceBar) {
+    var _a, _y, match, regexp, space;
+    flag = flag.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    if (should_startWithSpace) {
+      flag = '(?:^|\\s)' + flag;
+    }
+    _a = decodeURI("%C3%80");
+    _y = decodeURI("%C3%BF");
+    space = acceptSpaceBar ? "\ " : "";
+    regexp = new RegExp(flag + "([A-Za-z" + _a + "-" + _y + "0-9_" + space + "\.\+\-]*)$|" + flag + "([^\\x00-\\xff]*)$", 'gi');
+    match = regexp.exec(subtext);
+    if (match) {
+      return match[2] || match[1];
+    } else {
+      return null;
+    }
+  },
+  filter: function(query, data, searchKey) {
+    var _results, i, item, len;
+    _results = [];
+    for (i = 0, len = data.length; i < len; i++) {
+      item = data[i];
+      if (~new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase())) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  },
+  remoteFilter: null,
+  sorter: function(query, items, searchKey) {
+    var _results, i, item, len;
+    if (!query) {
+      return items;
+    }
+    _results = [];
+    for (i = 0, len = items.length; i < len; i++) {
+      item = items[i];
+      item.atwho_order = new String(item[searchKey]).toLowerCase().indexOf(query.toLowerCase());
+      if (item.atwho_order > -1) {
+        _results.push(item);
+      }
+    }
+    return _results.sort(function(a, b) {
+      return a.atwho_order - b.atwho_order;
+    });
+  },
+  tplEval: function(tpl, map) {
+    var error, template;
+    template = tpl;
+    try {
+      if (typeof tpl !== 'string') {
+        template = tpl(map);
+      }
+      return template.replace(/\$\{([^\}]*)\}/g, function(tag, key, pos) {
+        return map[key];
+      });
+    } catch (_error) {
+      error = _error;
+      return "";
+    }
+  },
+  highlighter: function(li, query) {
+    var regexp;
+    if (!query) {
+      return li;
+    }
+    regexp = new RegExp(">\\s*(\\w*?)(" + query.replace("+", "\\+") + ")(\\w*)\\s*<", 'ig');
+    return li.replace(regexp, function(str, $1, $2, $3) {
+      return '> ' + $1 + '<strong>' + $2 + '</strong>' + $3 + ' <';
+    });
+  },
+  beforeInsert: function(value, $li) {
+    return value;
+  },
+  beforeReposition: function(offset) {
+    return offset;
+  },
+  afterMatchFailed: function(at, el) {}
+};
+
+Api = {
+  load: function(at, data) {
+    var c;
+    if (c = this.controller(at)) {
+      return c.model.load(data);
+    }
+  },
+  isSelecting: function() {
+    var ref;
+    return (ref = this.controller()) != null ? ref.view.visible() : void 0;
+  },
+  hide: function() {
+    var ref;
+    return (ref = this.controller()) != null ? ref.view.hide() : void 0;
+  },
+  reposition: function() {
+    var c;
+    if (c = this.controller()) {
+      return c.view.reposition(c.rect());
+    }
+  },
+  setIframe: function(iframe, asRoot) {
+    this.setupRootElement(iframe, asRoot);
+    return null;
+  },
+  run: function() {
+    return this.dispatch();
+  },
+  destroy: function() {
+    this.shutdown();
+    return this.$inputor.data('atwho', null);
+  }
+};
+
+$.fn.atwho = function(method) {
+  var _args, result;
+  _args = arguments;
+  result = null;
+  this.filter('textarea, input, [contenteditable=""], [contenteditable=true]').each(function() {
+    var $this, app;
+    if (!(app = ($this = $(this)).data("atwho"))) {
+      $this.data('atwho', (app = new App(this)));
+    }
+    if (typeof method === 'object' || !method) {
+      return app.reg(method.at, method);
+    } else if (Api[method] && app) {
+      return result = Api[method].apply(app, Array.prototype.slice.call(_args, 1));
+    } else {
+      return $.error("Method " + method + " does not exist on jQuery.atwho");
+    }
+  });
+  if (result != null) {
+    return result;
+  } else {
+    return this;
+  }
+};
+
+$.fn.atwho["default"] = {
+  at: void 0,
+  alias: void 0,
+  data: null,
+  displayTpl: "<li>${name}</li>",
+  insertTpl: "${atwho-at}${name}",
+  callbacks: DEFAULT_CALLBACKS,
+  searchKey: "name",
+  suffix: void 0,
+  hideWithoutSuffix: false,
+  startWithSpace: true,
+  highlightFirst: true,
+  limit: 5,
+  maxLen: 20,
+  displayTimeout: 300,
+  delay: null,
+  spaceSelectsMatch: false,
+  tabSelectsMatch: true,
+  editableAtwhoQueryAttrs: {},
+  scrollDuration: 150
+};
+
+$.fn.atwho.debug = false;
+
+
+}));
+
 /*!
  * typeahead.js 0.11.1
  * https://github.com/twitter/typeahead.js

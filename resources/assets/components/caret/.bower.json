@@ -1,0 +1,36 @@
+{
+  "name": "caret",
+  "description": "Manipulate the caret's position in a text box or content-editable element.",
+  "main": "jquery.caret.js",
+  "license": [
+    "BSD-3-Clause"
+  ],
+  "ignore": [
+    "bower_components",
+    "node_modules",
+    "test.html"
+  ],
+  "keywords": [
+    "caret"
+  ],
+  "authors": [
+    {
+      "name": "Gideon Sireling",
+      "homepage": "http://www.accursoft.com/gideon-sireling.html"
+    }
+  ],
+  "homepage": "https://bitbucket.org/accursoft/caret",
+  "dependencies": {
+    "jquery": ">=1.3"
+  },
+  "_release": "baa799ec6d",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "baa799ec6dc4e5241d70ac837f39cf28de3d5606"
+  },
+  "_source": "git://github.com/accursoft/caret.git",
+  "_target": "*",
+  "_originalSource": "caret",
+  "_direct": true
+}
