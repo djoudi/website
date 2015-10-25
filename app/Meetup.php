@@ -44,7 +44,7 @@ class Meetup extends Model implements SluggableInterface
         return $query->where('approved', 1);
     }
 
-    public function author() {
+    public function user() {
         return $this->belongsTo(User::class, 'user_id');
     }
 }

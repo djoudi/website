@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\User;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
 use Laravel\Socialite\Facades\Socialite;
@@ -43,7 +45,8 @@ class AuthController extends Controller
     /**
      * Get a validator for an incoming registration request.
      *
-     * @param  array  $data
+     * @param Request $request
+     * @param  array $data
      * @return \Illuminate\Contracts\Validation\Validator
      */
     protected function validator(array $data)
@@ -51,8 +54,7 @@ class AuthController extends Controller
         return Validator::make($data, [
             'name' => 'required|max:255',
             'email' => 'required|email|max:255|unique:users',
-            'github_id' => 'unique:users',
-            'twitter_id' => 'unique:users',
+            'username' => 'unique:users',
             'password' => 'required|confirmed|min:6',
         ]);
     }
@@ -65,15 +67,34 @@ class AuthController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'username' => $data['username'],
-            'github_id' => $data['github_id'],
-            'twitter_id' => $data['twitter_id'],
-            'avatar' => $data['avatar'],
-            'password' => bcrypt($data['password']),
-        ]);
+        $request = new Request();
+
+        if($request->has('github_id')) {
+            return User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'username' => str_slug($data['username'], '_'),
+                'github_id' => $data['github_id'],
+                'avatar' => $data['avatar'],
+                'password' => bcrypt($data['password']),
+            ]);
+        } elseif ($request->has('twitter_id')) {
+            return User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'username' => str_slug($data['username'], '_'),
+                'twitter_id' => $data['twitter_id'],
+                'avatar' => $data['avatar'],
+                'password' => bcrypt($data['password']),
+            ]);
+        } else {
+            return User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'username' => str_slug($data['username'], '_'),
+                'password' => bcrypt($data['password']),
+            ]);
+        }
     }
 
     /**
@@ -96,7 +117,7 @@ class AuthController extends Controller
         try {
             $user = Socialite::driver('github')->user();
             session()->put('comp_name', $user->name);
-            session()->put('comp_username', $user->nickname);
+            session()->put('comp_username', str_slug($user->nickname, '_'));
             session()->put('comp_avatar', $user->avatar);
             session()->put('comp_github_id', $user->id);
         } catch (Exception $e) {
@@ -107,7 +128,7 @@ class AuthController extends Controller
 
         if(!$user->email) {
             session()->put('comp_name', $user->name);
-            session()->put('comp_username', $user->nickname);
+            session()->put('comp_username', str_slug($user->nickname, '_'));
             session()->put('comp_avatar', $user->avatar);
             session()->put('comp_github_id', $user->id);
             return redirect('auth/complete');
@@ -132,7 +153,7 @@ class AuthController extends Controller
 
         return User::create([
             'name' => $githubUser->name,
-            'username' => $githubUser->nickname,
+            'username' => str_slug($githubUser->nickname, '_'),
             'email' => $githubUser->email,
             'github_id' => $githubUser->id,
             'avatar' => $githubUser->avatar
@@ -159,14 +180,12 @@ class AuthController extends Controller
         try {
             $user = Socialite::driver('twitter')->user();
             session()->put('comp_name', $user->name);
-            session()->put('comp_username', $user->nickname);
+            session()->put('comp_username', str_slug($user->nickname, '_'));
             session()->put('comp_avatar', $user->avatar);
             session()->put('comp_twitter_id', $user->id);
         } catch (Exception $e) {
             return redirect('auth/complete');
         }
-
-
 
         $authUser = $this->findOrCreateTwitterUser($user);
 
@@ -188,7 +207,7 @@ class AuthController extends Controller
         }
 
         session()->put('comp_name', $twitterUser->name);
-        session()->put('comp_username', $twitterUser->nickname);
+        session()->put('comp_username', str_slug($twitterUser->nickname, '_'));
         session()->put('comp_avatar', $twitterUser->avatar);
         session()->put('comp_twitter_id', $twitterUser->id);
 

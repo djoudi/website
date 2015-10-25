@@ -16,7 +16,9 @@
             <ul class="nav navbar-nav">
                 <li><a href="{{ url('/') }}">Home</a></li>
                 <li><a href="{{ url('meetups') }}">Meetups</a></li>
-                <li><a href="{{ url('awesomes') }}">Awesome</a></li>
+                <li><a href="{{ url('lists') }}">Lists</a></li>
+                <li><a href="{{ url('projects') }}">Projects</a></li>
+                <li><a href="{{ url('jobs') }}">Jobs</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
                     <ul class="dropdown-menu">
@@ -33,8 +35,22 @@
             <ul class="nav navbar-nav navbar-right">
                 @if(auth()->check())
                     <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-plus"></i> <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ route('meetups.meetup.create') }}">Meetup</a></li>
+                            <li><a href="{{ route('lists.list.create') }}">List</a></li>
+                            <li><a href="#">Project</a></li>
+                            <li><a href="#">Job</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            <img style="max-height: 20px;" class="img img-circle" src="{{ url(auth()->user()->avatar) }}" alt="{{ auth()->user()->username }}"> {{ auth()->user()->username }}
+                            @if(auth()->user()->avatar)
+                                <img style="max-height: 20px;" class="img img-circle" src="{{ url(auth()->user()->avatar) }}" alt="{{ auth()->user()->username }}"> {{ auth()->user()->username }}
+                            @else
+                                <img style="max-height: 20px;" class="img img-circle" src="{{ '//www.gravatar.com/avatar/'.md5(strtolower(trim(auth()->user()->email))).'?d=mm&s=20'  }}" alt="{{ auth()->user()->username }}"> {{ auth()->user()->username }}
+                            @endif
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">

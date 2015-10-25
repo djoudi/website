@@ -89,7 +89,7 @@
                             <img src="{{ $meetup->thumbnail }}" alt="{{ $meetup->title }}">
                             <div class="caption">
                                 <h4>{{ $meetup->title }}</h4>
-                                <p>{{ $meetup->content }}</p>
+                                <p>{{ str_limit($meetup->content, 100) }}</p>
                                 <p><a href="{{ url('meetups/meetup/'.$meetup->getSlug()) }}" class="btn btn-info btn-xs" role="button">Show Meetup</a></p>
                             </div>
                         </div>
@@ -103,7 +103,7 @@
     @if($awesomes->count() > 0)
         <div class="container">
 
-            <h3 class="text-center">Recent Tutorials</h3>
+            <h3 class="text-center">Recent Lists</h3>
             <div class="row">
 
                 @foreach($awesomes as $awesome)
@@ -112,8 +112,8 @@
                             <img src="{{ $awesome->thumbnail }}" alt="{{ $awesome->title }}">
                             <div class="caption">
                                 <h4>{{ $awesome->title }}</h4>
-                                <p>{{ $awesome->content }}</p>
-                                <p><a href="{{ url('awesomes/list/'.$awesome->getSlug()) }}" class="btn btn-info btn-xs" role="button">Show Awesome-List</a></p>
+                                <p>{{ str_limit($awesome->content, 100) }}</p>
+                                <p><a href="{{ url('lists/list/'.$awesome->getSlug()) }}" class="btn btn-info btn-xs" role="button">Show List</a></p>
                             </div>
                         </div>
                     </div>

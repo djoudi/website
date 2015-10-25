@@ -17,10 +17,10 @@ class CreateAwesomesTable extends Migration
 
             $table->string('title');
             $table->string('slug');
-            $table->string('image');
-            $table->string('thumbnail');
+            $table->string('image')->default('images/list_placeholder.png')->nullable();
+            $table->string('thumbnail')->default('images/list_placeholder_thumb.png')->nullable();
             $table->text('content');
-            $table->text('topic');
+            $table->text('topic')->nullable();
             $table->string('url');
 
             $table->string('author')->nullable();

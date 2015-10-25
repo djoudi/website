@@ -2,6 +2,14 @@
 
 namespace App\Providers;
 
+use App\Awesome;
+use App\Job;
+use App\Meetup;
+use App\Policies\JobPolicy;
+use App\Policies\ListPolicy;
+use App\Policies\MeetupPolicy;
+use App\Policies\ProjectPolicy;
+use App\Project;
 use Illuminate\Contracts\Auth\Access\Gate as GateContract;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -13,7 +21,10 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
-        'App\Model' => 'App\Policies\ModelPolicy',
+        Meetup::class => MeetupPolicy::class,
+        Awesome::class => ListPolicy::class,
+        Project::class => ProjectPolicy::class,
+        Job::class => JobPolicy::class,
     ];
 
     /**

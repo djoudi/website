@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\User;
 
 use App\User;
+use Exception;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 
 class AccountController extends Controller
@@ -24,6 +28,13 @@ class AccountController extends Controller
             }
 
             if($request->hasFile('image')) {
+                $oldfile = $user->avatar;
+                try {
+                    Storage::delete($oldfile);
+                } catch (Exception $e) {
+
+                }
+
                 $file = $request->file('image');
                 $filename = time().'_'.$request->user()->username.'.'.$file->getClientOriginalExtension();
                 $request->file('image')->move('uploads/users', $filename);
@@ -35,7 +46,7 @@ class AccountController extends Controller
                 ]);
             } else {
                 $user->update([
-                    'username' => $request->get('username'),
+                    'username' => str_slug($request->get('username'), '_'),
                     'name' => $request->get('name'),
                     'email' => $request->get('email'),
                 ]);

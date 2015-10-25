@@ -45,7 +45,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
         return $this->hasMany(Meetup::class);
     }
 
-    public function awesomes() {
+    public function lists() {
         return $this->hasMany(Awesome::class);
     }
 

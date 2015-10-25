@@ -35,13 +35,14 @@ Route::post('password/reset', 'Auth\PasswordController@postReset');
 
 Route::group(['prefix' => 'meetups'], function () {
     Route::get('/', 'Meetup\MeetupController@index');
-    Route::get('meetup/{slug}', 'Meetup\MeetupController@show');
-    Route::get('meetup/{slug}/attendees', 'Meetup\AttendeeController@show');
+    Route::resource('meetup', 'Meetup\MeetupController');
+    Route::resource('meetup.attendees', 'Meetup\AttendeeController');
+    Route::resource('meetup.sponsors', 'Meetup\SponsorController');
 });
 
-Route::group(['prefix' => 'awesomes'], function () {
+Route::group(['prefix' => 'lists'], function () {
     Route::get('/', 'Awesome\AwesomeController@index');
-    Route::get('list/{slug}', 'Awesome\AwesomeController@show');
+    Route::resource('list', 'Awesome\AwesomeController');
 });
 
 Route::group(['prefix' => 'account', 'middleware' => 'auth'], function () {

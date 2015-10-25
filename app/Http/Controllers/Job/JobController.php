@@ -1,17 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Meetup;
+namespace App\Http\Controllers\Job;
 
 use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
-class AttendeeController extends Controller
+class JobController extends Controller
 {
-    public function __construct() {
-        $this->middleware('auth', ['except' => ['index', 'show']]);
-    }
-
     /**
      * Display a listing of the resource.
      *
