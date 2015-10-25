@@ -331,16 +331,16 @@
         },
         {
             "name": "genealabs/laravel-mixpanel",
-            "version": "0.4.6",
+            "version": "0.4.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/GeneaLabs/laravel-mixpanel.git",
-                "reference": "5c8eea4ef648a109b097c50e6878a8d1799f9bcb"
+                "reference": "b04fba495564ae8894f57d1b65226cfc9165a3f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GeneaLabs/laravel-mixpanel/zipball/5c8eea4ef648a109b097c50e6878a8d1799f9bcb",
-                "reference": "5c8eea4ef648a109b097c50e6878a8d1799f9bcb",
+                "url": "https://api.github.com/repos/GeneaLabs/laravel-mixpanel/zipball/b04fba495564ae8894f57d1b65226cfc9165a3f7",
+                "reference": "b04fba495564ae8894f57d1b65226cfc9165a3f7",
                 "shasum": ""
             },
             "require": {
@@ -372,7 +372,7 @@
                 }
             ],
             "description": "MixPanel wrapper for Laravel 5.",
-            "time": "2015-09-25 17:05:41"
+            "time": "2015-10-25 18:11:13"
         },
         {
             "name": "graham-campbell/manager",
@@ -1778,16 +1778,16 @@
         },
         {
             "name": "paragonie/random_compat",
-            "version": "1.0.9",
+            "version": "1.0.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/random_compat.git",
-                "reference": "7647ac58c35ece044b939e01c85dbaa73ed26351"
+                "reference": "2fa50aa2f17066fa74ba00d943e8cee1a98284af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/random_compat/zipball/7647ac58c35ece044b939e01c85dbaa73ed26351",
-                "reference": "7647ac58c35ece044b939e01c85dbaa73ed26351",
+                "url": "https://api.github.com/repos/paragonie/random_compat/zipball/2fa50aa2f17066fa74ba00d943e8cee1a98284af",
+                "reference": "2fa50aa2f17066fa74ba00d943e8cee1a98284af",
                 "shasum": ""
             },
             "require": {
@@ -1819,7 +1819,7 @@
                 "pseudorandom",
                 "random"
             ],
-            "time": "2015-10-20 15:22:41"
+            "time": "2015-10-23 13:21:37"
         },
         {
             "name": "pda/pheanstalk",

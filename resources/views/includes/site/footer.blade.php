@@ -52,6 +52,26 @@
 <script src="https://cdn.jsdelivr.net/algoliasearch/3/algoliasearch.min.js"></script>
 <script src="{{ elixir('js/app.js') }}"></script>
 
+<script type="text/javascript">
+    !function(o,n){function i(o){return function(){return threads.push({m:o,args:Array.prototype.slice.call(arguments)}),threads}}var threads=o.threads=o.threads||[];if(!threads.initialize){if(threads.invoked)return void(o.console&&console.error&&console.error("threads snippet included twice."));threads.invoked=!0;for(var c=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","group","track","ready","alias","page","once","off","on"],p=0;p<c.length;p++){var l=c[p];threads[l]=i(l)}
+        threads.load=function(o){var i=n.createElement("script"),c="https:"===n.location.protocol?"https://":"http://";i.type="text/javascript",i.async=!0,i.src=c+"cdn.threads.io/analytics/"+o+"/threads.min.js";var p=n.getElementsByTagName("script")[0];p.parentNode.insertBefore(i,p)},threads.SNIPPET_VERSION="1.1.0",
+                threads.load("4NxMHY"),
+                threads.page()}}(window,document);
+</script>
+
+@if(env('APP_ENV') != 'local')
+    <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-66152253-1', 'auto');
+        ga('send', 'pageview');
+
+    </script>
+@endif
+
 @include('sweet::alert')
 
 </body>
