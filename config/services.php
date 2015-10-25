@@ -47,4 +47,8 @@ return [
         'redirect' => env('TWITTER_CALLBACK_URL'),
     ],
 
+    'mixpanel' => [
+        'token' => env('MIXPANEL_TOKEN'),
+    ],
+
 ];

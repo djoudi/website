@@ -158,6 +158,7 @@ return [
         Thujohn\Twitter\TwitterServiceProvider::class,
         GrahamCampbell\Markdown\MarkdownServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
+        GeneaLabs\LaravelMixpanel\Providers\LaravelMixpanelServiceProvider::class,
 
     ],
 
