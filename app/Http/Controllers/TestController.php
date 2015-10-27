@@ -20,6 +20,7 @@ class TestController extends Controller
             'street' => 'Test und so',
             'housenumber' => 'Test und so',
             'zip' => 'Test und so',
+            'approved' => '1'
         ]);
         auth()->user()->meetups()->save($meetup);
     }
@@ -33,6 +34,6 @@ class TestController extends Controller
             'url' => 'https://raw.githubusercontent.com/GrahamCampbell/Laravel-Markdown/master/README.md',
             'approved' => '1',
         ]);
-        auth()->user()->awesomes()->save($list);
+        auth()->user()->lists()->save($list);
     }
 }

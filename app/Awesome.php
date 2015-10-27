@@ -6,11 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Cviebrock\EloquentSluggable\SluggableInterface;
 use Cviebrock\EloquentSluggable\SluggableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use AlgoliaSearch\Laravel\AlgoliaEloquentTrait;
 
 class Awesome extends Model implements SluggableInterface
 {
-    use SoftDeletes, SluggableTrait;
+    use SoftDeletes, SluggableTrait, AlgoliaEloquentTrait;
+
+    public static $autoIndex = true;
+    public static $autoDelete = true;
 
     /**
      * The database table used by the model.
@@ -18,6 +21,7 @@ class Awesome extends Model implements SluggableInterface
      * @var string
      */
     protected $table = 'awesomes';
+    public $indices = ['dev_lists'];
 
     /**
      * The attributes that are mass assignable.
@@ -37,6 +41,18 @@ class Awesome extends Model implements SluggableInterface
         'approved'
     ];
 
+    public $algoliaSettings = [
+        'attributesToIndex' => [
+            'title',
+            'topic',
+            'author'
+        ],
+        'customRanking' => [
+            'desc(popularity)',
+            'asc(title)',
+        ],
+    ];
+
     public function scopeApproved($query)
     {
         return $query->where('approved', 1);
@@ -45,4 +61,5 @@ class Awesome extends Model implements SluggableInterface
     public function user() {
         return $this->belongsTo(User::class, 'user_id');
     }
+
 }

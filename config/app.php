@@ -159,6 +159,8 @@ return [
         GrahamCampbell\Markdown\MarkdownServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
         GeneaLabs\LaravelMixpanel\Providers\LaravelMixpanelServiceProvider::class,
+        AlgoliaSearch\Laravel\AlgoliaServiceProvider::class,
+        Bugsnag\BugsnagLaravel\BugsnagLaravelServiceProvider::class,
 
     ],
 
@@ -219,6 +221,7 @@ return [
         'Twitter'   => Thujohn\Twitter\Facades\Twitter::class,
         'Markdown'  => GrahamCampbell\Markdown\Facades\Markdown::class,
         'Image'     => Intervention\Image\Facades\Image::class,
+        'Bugsnag'   => Bugsnag\BugsnagLaravel\BugsnagFacade::class,
 
     ],
 

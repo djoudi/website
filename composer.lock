@@ -4,9 +4,201 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "bb207ea5cd113d9fe6cde8b0c3899310",
-    "content-hash": "46bb6b18b9ba8c3ce57265629024e3d3",
+    "hash": "c52fdcbf88340f22c2dc986c7e79613c",
+    "content-hash": "edd848ef9000fded793b625c610ae9b5",
     "packages": [
+        {
+            "name": "algolia/algoliasearch-client-php",
+            "version": "1.6.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/algolia/algoliasearch-client-php.git",
+                "reference": "56388cacd27d96f9430794f7b2250ec3151abd5c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/algolia/algoliasearch-client-php/zipball/56388cacd27d96f9430794f7b2250ec3151abd5c",
+                "reference": "56388cacd27d96f9430794f7b2250ec3151abd5c",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.0.*",
+                "satooshi/php-coveralls": "dev-master"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "AlgoliaSearch": "src/",
+                    "AlgoliaSearch\\Tests": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Algolia Team",
+                    "email": "contact@algolia.com"
+                },
+                {
+                    "name": "Ryan T. Catlin",
+                    "email": "ryan.catlin@gmail.com"
+                },
+                {
+                    "name": "Jonathan H. Wage",
+                    "email": "jonwage@gmail.com"
+                }
+            ],
+            "description": "Algolia Search API Client for PHP",
+            "homepage": "https://github.com/algolia/algoliasearch-client-php",
+            "time": "2015-09-07 15:50:04"
+        },
+        {
+            "name": "algolia/algoliasearch-laravel",
+            "version": "1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/algolia/algoliasearch-laravel.git",
+                "reference": "52bb0e4ff60e309997fbc1131b2ffd1a1c198933"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/algolia/algoliasearch-laravel/zipball/52bb0e4ff60e309997fbc1131b2ffd1a1c198933",
+                "reference": "52bb0e4ff60e309997fbc1131b2ffd1a1c198933",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.9",
+                "vinkla/algolia": "~2.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "~0.9",
+                "orchestra/testbench": "3.1.*",
+                "phpunit/phpunit": "~4.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "AlgoliaSearch\\Laravel\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel Algolia extension",
+            "keywords": [
+                "algolia",
+                "api",
+                "laravel",
+                "search"
+            ],
+            "time": "2015-09-21 09:50:23"
+        },
+        {
+            "name": "bugsnag/bugsnag",
+            "version": "v2.5.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bugsnag/bugsnag-php.git",
+                "reference": "30af9dfc67c42bd3c392c7917b4b35d08a53da74"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bugsnag/bugsnag-php/zipball/30af9dfc67c42bd3c392c7917b4b35d08a53da74",
+                "reference": "30af9dfc67c42bd3c392c7917b4b35d08a53da74",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.2.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "3.7.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Bugsnag_": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "James Smith",
+                    "email": "notifiers@bugsnag.com",
+                    "homepage": "https://bugsnag.com"
+                }
+            ],
+            "description": "Official Bugsnag notifier for PHP applications.",
+            "homepage": "https://github.com/bugsnag/bugsnag-php",
+            "keywords": [
+                "bugsnag",
+                "errors",
+                "exceptions",
+                "logging",
+                "tracking"
+            ],
+            "time": "2015-07-01 02:43:15"
+        },
+        {
+            "name": "bugsnag/bugsnag-laravel",
+            "version": "v1.6.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bugsnag/bugsnag-laravel.git",
+                "reference": "43cbba24bfc8c476d59cb1dbc7591f4e8632c5a5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bugsnag/bugsnag-laravel/zipball/43cbba24bfc8c476d59cb1dbc7591f4e8632c5a5",
+                "reference": "43cbba24bfc8c476d59cb1dbc7591f4e8632c5a5",
+                "shasum": ""
+            },
+            "require": {
+                "bugsnag/bugsnag": ">=2.5.0",
+                "illuminate/support": "4.*|5.*",
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Bugsnag\\BugsnagLaravel\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "James Smith",
+                    "email": "notifiers@bugsnag.com"
+                }
+            ],
+            "description": "Official Bugsnag notifier for Laravel applications.",
+            "homepage": "https://github.com/bugsnag/bugsnag-laravel",
+            "keywords": [
+                "bugsnag",
+                "errors",
+                "exceptions",
+                "laravel",
+                "logging",
+                "tracking"
+            ],
+            "time": "2015-07-22 14:48:17"
+        },
         {
             "name": "classpreloader/classpreloader",
             "version": "2.0.0",
@@ -125,16 +317,16 @@
         },
         {
             "name": "cviebrock/eloquent-sluggable",
-            "version": "3.1.0",
+            "version": "3.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/cviebrock/eloquent-sluggable.git",
-                "reference": "1192fc168df55452a5546e918c1d1c0657df99eb"
+                "reference": "666928685989e04cf1ab28d049984f457e80cd76"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/cviebrock/eloquent-sluggable/zipball/1192fc168df55452a5546e918c1d1c0657df99eb",
-                "reference": "1192fc168df55452a5546e918c1d1c0657df99eb",
+                "url": "https://api.github.com/repos/cviebrock/eloquent-sluggable/zipball/666928685989e04cf1ab28d049984f457e80cd76",
+                "reference": "666928685989e04cf1ab28d049984f457e80cd76",
                 "shasum": ""
             },
             "require": {
@@ -171,7 +363,7 @@
                 "laravel",
                 "slug"
             ],
-            "time": "2015-10-14 16:15:32"
+            "time": "2015-10-26 16:58:25"
         },
         {
             "name": "danielstjules/stringy",
@@ -331,16 +523,16 @@
         },
         {
             "name": "genealabs/laravel-mixpanel",
-            "version": "0.4.7",
+            "version": "0.4.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/GeneaLabs/laravel-mixpanel.git",
-                "reference": "b04fba495564ae8894f57d1b65226cfc9165a3f7"
+                "reference": "8780d281e2006e7acb1a92815d9b8bf2f339384c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GeneaLabs/laravel-mixpanel/zipball/b04fba495564ae8894f57d1b65226cfc9165a3f7",
-                "reference": "b04fba495564ae8894f57d1b65226cfc9165a3f7",
+                "url": "https://api.github.com/repos/GeneaLabs/laravel-mixpanel/zipball/8780d281e2006e7acb1a92815d9b8bf2f339384c",
+                "reference": "8780d281e2006e7acb1a92815d9b8bf2f339384c",
                 "shasum": ""
             },
             "require": {
@@ -372,7 +564,7 @@
                 }
             ],
             "description": "MixPanel wrapper for Laravel 5.",
-            "time": "2015-10-25 18:11:13"
+            "time": "2015-10-25 19:41:20"
         },
         {
             "name": "graham-campbell/manager",
@@ -3061,6 +3253,62 @@
                 "sweet"
             ],
             "time": "2015-09-23 17:26:02"
+        },
+        {
+            "name": "vinkla/algolia",
+            "version": "2.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/vinkla/algolia.git",
+                "reference": "506f8a0bd9dce0fd10bee4ef5991c2cc8ca82681"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/vinkla/algolia/zipball/506f8a0bd9dce0fd10bee4ef5991c2cc8ca82681",
+                "reference": "506f8a0bd9dce0fd10bee4ef5991c2cc8ca82681",
+                "shasum": ""
+            },
+            "require": {
+                "algolia/algoliasearch-client-php": "~1.0",
+                "graham-campbell/manager": "~2.2",
+                "illuminate/contracts": "5.0.*|5.1.*",
+                "illuminate/support": "5.0.*|5.1.*",
+                "php": ">=5.5.9"
+            },
+            "require-dev": {
+                "graham-campbell/testbench": "~3.0",
+                "mockery/mockery": "^0.9.4",
+                "phpunit/phpunit": "^4.8|^5.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Vinkla\\Algolia\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Vincent Klaiber",
+                    "email": "hello@vinkla.com"
+                }
+            ],
+            "description": "An Algolia bridge for Laravel",
+            "keywords": [
+                "algolia",
+                "api",
+                "laravel",
+                "search"
+            ],
+            "time": "2015-10-07 06:22:31"
         },
         {
             "name": "vinkla/pusher",

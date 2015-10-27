@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Cviebrock\EloquentSluggable\SluggableInterface;
 use Cviebrock\EloquentSluggable\SluggableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use AlgoliaSearch\Laravel\AlgoliaEloquentTrait;
 
 class Meetup extends Model implements SluggableInterface
 {
-    use SoftDeletes, SluggableTrait;
+    use SoftDeletes, SluggableTrait, AlgoliaEloquentTrait;
+
+    public static $autoIndex = true;
+    public static $autoDelete = true;
 
     /**
      * The database table used by the model.
@@ -17,6 +21,7 @@ class Meetup extends Model implements SluggableInterface
      * @var string
      */
     protected $table = 'meetups';
+    public $indices = ['dev_meetups'];
 
     /**
      * The attributes that are mass assignable.
@@ -31,12 +36,24 @@ class Meetup extends Model implements SluggableInterface
         'content',
         'topic',
         'city',
-        'street',
-        'housenumber',
+        'address',
         'zip',
         'url',
         'user_id',
         'approved'
+    ];
+
+    public $algoliaSettings = [
+        'attributesToIndex' => [
+            'title',
+            'topic',
+            'address',
+            'city'
+        ],
+        'customRanking' => [
+            'desc(popularity)',
+            'asc(title)',
+        ],
     ];
 
     public function scopeApproved($query)

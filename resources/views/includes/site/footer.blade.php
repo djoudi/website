@@ -3,32 +3,31 @@
     <div class="row">
         <div class="col-xs-3">
             <ul class="list-unstyled">
-                <li>GitHub<li>
-                <li><a href="#">About us</a></li>
-                <li><a href="#">Blog</a></li>
-                <li><a href="#">Contact & support</a></li>
-                <li><a href="#">Enterprise</a></li>
-                <li><a href="#">Site status</a></li>
+                <li>devpane<li>
+                <li><a href="#">About</a></li>
+                <a href="devpane@helpful.io" data-helpful="devpane" data-helpful-modal="on" data-helpful-overlay="on">Support</a>
+                <li><a href="{{ url('contact') }}">Contact</a></li>
+                <li><a href="{{ url('contribute') }}">Contribute</a></li>
+                <li><a href="{{ url('faq') }}">FAQ</a></li>
             </ul>
         </div>
         <div class="col-xs-3">
             <ul class="list-unstyled">
-                <li>Applications<li>
-                <li><a href="#">Product for Mac</a></li>
-                <li><a href="#">Product for Windows</a></li>
-                <li><a href="#">Product for Eclipse</a></li>
-                <li><a href="#">Product mobile apps</a></li>
+                <li>Contributions<li>
+                <li><a href="#">Meetups</a></li>
+                <li><a href="#">Lists</a></li>
+                <li><a href="#">Projects</a></li>
+                <li><a href="#">Jobs</a></li>
             </ul>
         </div>
         <div class="col-xs-3">
             <ul class="list-unstyled">
-                <li>Services<li>
-                <li><a href="#">Web analytics</a></li>
-                <li><a href="#">Presentations</a></li>
-                <li><a href="#">Code snippets</a></li>
-                <li><a href="#">Job board</a></li>
+                <li>Elsewhere<li>
+                <li><a href="#">GitHub</a></li>
+                <li><a href="#">Twitter</a></li>
             </ul>
         </div>
+
         <div class="col-xs-3 hidden-xs">
             <a href="https://mixpanel.com/f/partner" rel="nofollow"><img src="//cdn.mxpnl.com/site_media/images/partner/badge_blue.png" alt="Mobile Analytics" /></a>
         </div>
@@ -51,6 +50,7 @@
 <script src="{{ elixir('js/vendor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/algoliasearch/3/algoliasearch.min.js"></script>
 <script src="{{ elixir('js/app.js') }}"></script>
+<script async src="https://assets.helpful.io/assets/widget.js"></script>
 
 <script type="text/javascript">
     !function(o,n){function i(o){return function(){return threads.push({m:o,args:Array.prototype.slice.call(arguments)}),threads}}var threads=o.threads=o.threads||[];if(!threads.initialize){if(threads.invoked)return void(o.console&&console.error&&console.error("threads snippet included twice."));threads.invoked=!0;for(var c=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","group","track","ready","alias","page","once","off","on"],p=0;p<c.length;p++){var l=c[p];threads[l]=i(l)}
