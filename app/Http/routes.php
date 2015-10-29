@@ -51,5 +51,5 @@ Route::group(['prefix' => 'account', 'middleware' => 'auth'], function () {
     Route::post('update/{id}', 'User\AccountController@postUpdate');
 });
 
-Route::get('test/meetup', 'TestController@newMeetup');
-Route::get('test/list', 'TestController@newList');
+//Route::get('test/meetup', 'TestController@newMeetup');
+//Route::get('test/list', 'TestController@newList');

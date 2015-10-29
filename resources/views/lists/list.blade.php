@@ -46,7 +46,7 @@
                     <img src="@{{ thumbnail }}" alt="@{{ title }}">
                     <div class="caption">
                         <h4>@{{{ _highlightResult.title.value }}}</h4>
-                        <p><a href="list/@{{ slug }}" class="btn btn-info btn-xs" role="button">Show List</a></p>
+                        <p><a href="lists/list/@{{ slug }}" class="btn btn-info btn-xs" role="button">Show List</a></p>
                     </div>
                 </div>
             </div>
