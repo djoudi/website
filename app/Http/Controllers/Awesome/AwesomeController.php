@@ -119,24 +119,60 @@ class AwesomeController extends Controller
     {
         $list = Awesome::findBySlug($slug);
         if (Gate::denies('update', $list)) {
-            alert()->error('You you don´ have access to this property.', 'Whoops! =(');
+            alert()->error('You you don´ have access to this entry.', 'Whoops! =(');
             return redirect()->intended('/');
         }
+        return view('lists.edit', compact('list'));
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request $request
-     * @param $slug
+     * @param $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
-        $list = Awesome::findBySlug($slug);
+        $list = Awesome::findOrFail($id);
         if (Gate::denies('update', $list)) {
-            alert()->error('You you don´ have access to this property.', 'Whoops! =(');
+            alert()->error('You you don´ have access to this entry.', 'Whoops! =(');
             return redirect()->intended('/');
+        }
+
+        if($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = time().'_'.str_slug($request->get('title')).'.'.$file->getClientOriginalExtension();
+            $request->file('image')->move('uploads/awesome', $filename);
+
+            $thumbname = time().'_'.str_slug($request->get('title')).'_thumb.'.$file->getClientOriginalExtension();
+            $thumbnail = Image::make('uploads/awesome/'.$filename)->fit(500, 300)->save('uploads/awesome/'.$thumbname);
+
+            $list->update([
+                'title' => $request->get('title'),
+                'image' => $filename,
+                'thumbnail' => 'uploads/awesome/'.$thumbname,
+                'content' => $request->get('content'),
+                'topic' => $request->get('topic'),
+                'author' => $request->get('author'),
+                'url' => $request->get('url'),
+            ]);
+
+            auth()->user()->lists()->save($list);
+            alert()->success('List successfully created.', 'Wahoo!');
+            return redirect()->intended('lists/list/'.$list->getSlug());
+        } else {
+            $list->update([
+                'title' => $request->get('title'),
+                'content' => $request->get('content'),
+                'topic' => $request->get('topic'),
+                'author' => $request->get('author'),
+                'url' => $request->get('url'),
+            ]);
+
+            auth()->user()->lists()->save($list);
+            alert()->success('List successfully updated.', 'Wahoo!');
+            return redirect()->intended('lists/list/'.$list->getSlug());
         }
     }
 
@@ -150,7 +186,7 @@ class AwesomeController extends Controller
     {
         $list = Awesome::findBySlug($slug);
         if (Gate::denies('update', $list)) {
-            alert()->error('You you don´ have access to this property.', 'Whoops! =(');
+            alert()->error('You you don´ have access to this entry.', 'Whoops! =(');
             return redirect()->intended('/');
         }
 
