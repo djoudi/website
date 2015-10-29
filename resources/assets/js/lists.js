@@ -1,7 +1,7 @@
 $(document).ready(function() {
 
-    var APPLICATION_ID = 'PUT_ID_HERE'; // Your app id
-    var SEARCH_ONLY_API_KEY = 'PUT_KEY_HERE'; // Please insert you own key
+    var APPLICATION_ID = 'KAOHBYN8XP'; // Your app id
+    var SEARCH_ONLY_API_KEY = 'b12be27d85808a64a0ceb2c7f5bbcc87'; // Please insert you own key
     var INDEX_NAME = 'awesomes_production';
     var PARAMS = {
         hitsPerPage: 10000,
