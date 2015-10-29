@@ -25,7 +25,7 @@
   "dependencies": {
     "bootstrap": "~3.3.5",
     "font-awesome": "~4.4.0",
-    "vue": "~0.12.16",
+    "vue": "~1.0",
     "sweetalert": "~1.1.1",
     "lity": "~1.5.0",
     "typeahead.js": "~0.11.1",
@@ -34,6 +34,11 @@
     "caret": "*",
     "jquery-textcomplete": "~0.8.1",
     "pusher": "~3.0.0",
-    "noty": "~2.3.7"
+    "noty": "~2.3.7",
+    "angular": "~1.4.7",
+    "angular-google-places-autocomplete": "~0.2.7",
+    "angular-auto-validate": "~1.19.0",
+    "hogan.js": "hogan#~3.0.2",
+    "algoliasearch": "~3.9.0"
   }
 }

@@ -29,8 +29,9 @@
         "graham-campbell/markdown": "^5.1",
         "intervention/image": "^2.3",
         "genealabs/laravel-mixpanel": "~0.4.3",
-        "algolia/algoliasearch-laravel": "^1.0",
-        "bugsnag/bugsnag-laravel": "^1.6"
+        "bugsnag/bugsnag-laravel": "^1.6",
+        "vinkla/algolia": "^2.1",
+        "algolia/algoliasearch-laravel": "^1.0"
     },
 
     "require-dev": {

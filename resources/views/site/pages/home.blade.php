@@ -59,7 +59,7 @@
                         </hgroup>
 
                     </div>
-                    <div class="overlay"></div>
+                    <div class="overlay"></div>https://github.com/devpane/website
                     <a href="#"><img src="https://placekitten.com/1600/600" /></a>
 
                 </div>
@@ -76,6 +76,11 @@
     </section>
 
     <br/>
+
+    <div class="container">
+        <h1>PLEASE NOTE:</h1>
+        <p>This website is still in development. Feel free to contribute on <a href="https://github.com/devpane/website">GitHub</a>.</p>
+    </div>
 
     @if($meetups->count() > 0)
         <div class="container">

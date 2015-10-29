@@ -15,13 +15,14 @@ class Awesome extends Model implements SluggableInterface
     public static $autoIndex = true;
     public static $autoDelete = true;
 
+    public static $perEnvironment = true;
+
     /**
      * The database table used by the model.
      *
      * @var string
      */
     protected $table = 'awesomes';
-    public $indices = ['dev_lists'];
 
     /**
      * The attributes that are mass assignable.
@@ -39,18 +40,6 @@ class Awesome extends Model implements SluggableInterface
         'author',
         'user_id',
         'approved'
-    ];
-
-    public $algoliaSettings = [
-        'attributesToIndex' => [
-            'title',
-            'topic',
-            'author'
-        ],
-        'customRanking' => [
-            'desc(popularity)',
-            'asc(title)',
-        ],
     ];
 
     public function scopeApproved($query)

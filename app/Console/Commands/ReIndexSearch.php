@@ -5,7 +5,9 @@ namespace App\Console\Commands;
 use App\Awesome;
 use App\Job;
 use App\Meetup;
+use App\Project;
 use Illuminate\Console\Command;
+use Vinkla\Algolia\Facades\Algolia;
 
 class ReIndexSearch extends Command
 {
@@ -41,16 +43,28 @@ class ReIndexSearch extends Command
     public function handle()
     {
         $lists = Awesome::approved()->get();
-        //Job::approved()->reindex();
+        foreach ($lists as $item) {
+            $item->pushToIndex();
+        }
+        $this->info('Lists successfully updated');
+
         $meetups = Meetup::approved()->get();
-
-        foreach ($lists as $list) {
-            $list->reindex();
+        foreach ($meetups as $item) {
+            $item->pushToIndex();
         }
+        $this->info('Meetups successfully updated');
 
-        foreach ($meetups as $meetup) {
-            $meetup->reindex();
+        $jobs = Job::approved()->get();
+        foreach ($jobs as $item) {
+            $item->pushToIndex();
         }
+        $this->info('Jobs successfully updated');
+
+        $pojects = Project::approved()->get();
+        foreach ($pojects as $item) {
+            $item->pushToIndex();
+        }
+        $this->info('Projects successfully updated');
 
     }
 }

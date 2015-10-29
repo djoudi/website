@@ -15,13 +15,14 @@ class Meetup extends Model implements SluggableInterface
     public static $autoIndex = true;
     public static $autoDelete = true;
 
+    public static $perEnvironment = true;
+
     /**
      * The database table used by the model.
      *
      * @var string
      */
     protected $table = 'meetups';
-    public $indices = ['dev_meetups'];
 
     /**
      * The attributes that are mass assignable.
@@ -41,19 +42,6 @@ class Meetup extends Model implements SluggableInterface
         'url',
         'user_id',
         'approved'
-    ];
-
-    public $algoliaSettings = [
-        'attributesToIndex' => [
-            'title',
-            'topic',
-            'address',
-            'city'
-        ],
-        'customRanking' => [
-            'desc(popularity)',
-            'asc(title)',
-        ],
     ];
 
     public function scopeApproved($query)

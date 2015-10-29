@@ -159,8 +159,9 @@ return [
         GrahamCampbell\Markdown\MarkdownServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
         GeneaLabs\LaravelMixpanel\Providers\LaravelMixpanelServiceProvider::class,
-        AlgoliaSearch\Laravel\AlgoliaServiceProvider::class,
         Bugsnag\BugsnagLaravel\BugsnagLaravelServiceProvider::class,
+        AlgoliaSearch\Laravel\AlgoliaServiceProvider::class,
+        Vinkla\Algolia\AlgoliaServiceProvider::class,
 
     ],
 
@@ -222,6 +223,7 @@ return [
         'Markdown'  => GrahamCampbell\Markdown\Facades\Markdown::class,
         'Image'     => Intervention\Image\Facades\Image::class,
         'Bugsnag'   => Bugsnag\BugsnagLaravel\BugsnagFacade::class,
+        'Algolia'   => Vinkla\Algolia\Facades\Algolia::class,
 
     ],
 

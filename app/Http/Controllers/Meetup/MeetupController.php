@@ -22,7 +22,7 @@ class MeetupController extends Controller
      */
     public function index()
     {
-        //
+        return view('meetups.list');
     }
 
     /**

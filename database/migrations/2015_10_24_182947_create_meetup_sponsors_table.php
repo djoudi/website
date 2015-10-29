@@ -14,6 +14,15 @@ class CreateMeetupSponsorsTable extends Migration
     {
         Schema::create('meetup_sponsors', function (Blueprint $table) {
             $table->increments('id');
+
+            $table->string('title');
+            $table->string('slug');
+            $table->text('content');
+            $table->string('url');
+
+            $table->boolean('approved')->default('0');
+
+            $table->softDeletes();
             $table->timestamps();
         });
     }

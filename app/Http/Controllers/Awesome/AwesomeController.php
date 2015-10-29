@@ -26,9 +26,7 @@ class AwesomeController extends Controller
      */
     public function index()
     {
-        $lists = Awesome::approved()->paginate(12);
-        return view('lists.list', compact('lists'));
-
+        return view('lists.list');
     }
 
     /**
@@ -160,4 +158,5 @@ class AwesomeController extends Controller
         alert()->success('Item successfully deleted.', 'Wahoo!');
         return redirect()->intended('/');
     }
+
 }
